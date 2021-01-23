@@ -24,7 +24,22 @@ def create_user():
     if result.matched_count > 0:
         return Response("email already exists: " + user_info["email"], 409)
 
-    return "success"
+    return Response("success", 200)
+
+@app.route('/login-user', methods=['POST'])
+def login_user():
+    auth_info = request.json
+    result = users_collection.find_one(
+        {"email": auth_info["email"]}
+    )
+
+    if result == None:
+        return Response("email not found: " + auth_info["email"], 401)
+
+    if result["password"] != auth_info["password"]:
+        return Response("incorrect password: " + auth_info["password"], 401)
+
+    return Response("success", 200)
 
 if __name__ == '__main__':
     app.run()
