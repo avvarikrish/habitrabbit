@@ -54,35 +54,7 @@ export class App extends React.Component {
   }
 
   loginHandler(username, password) {
-    fetch("http://127.0.0.1:5000/login-user", 
-    {
-      method: "POST",
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: username,
-        password: password
-      })
-    })
-      .then((response) => {
-        console.log(response)
-        if (response["status"] == 200) {
-          this.setState({userToken: true})
-        } else {
-          Alert.alert("Invalid Username or Password");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-    // this.setState({userToken: true})
-  }
-
-  signupHandler(username, firstname, lastname, password){
-    // fetch("http://127.0.0.1:5000/create-user", 
+    // fetch("http://127.0.0.1:5000/users/login-user", 
     // {
     //   method: "POST",
     //   headers: {
@@ -90,7 +62,7 @@ export class App extends React.Component {
     //     'Content-Type': 'application/json'
     //   },
     //   body: JSON.stringify({
-    //     email: username,
+    //     username: username,
     //     password: password
     //   })
     // })
@@ -105,7 +77,37 @@ export class App extends React.Component {
     //   .catch((error) => {
     //     console.error(error);
     //   });
-    console.log(username, firstname, lastname, password);
+
+    this.setState({userToken: true})
+  }
+
+  signupHandler(username, first_name, last_name, password){
+    fetch("http://127.0.0.1:5000/users/create-user", 
+    {
+      method: "POST",
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: username,
+        first_name: first_name,
+        last_name: last_name,
+        password: password
+      })
+    })
+      .then((response) => {
+        console.log(response)
+        if (response["status"] == 200) {
+          this.setState({userToken: true})
+        } else {
+          Alert.alert("Invalid Sign Up");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    console.log(username, first_name, last_name, password);
   }
 
   SignIn() {

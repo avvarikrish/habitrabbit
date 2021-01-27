@@ -77,7 +77,7 @@ export class Login extends React.Component {
                 <TextInput
                     autoCaptialize = {"none"}
                     style = {styles.userInputStyle1}
-                    placeholder="Email"
+                    placeholder="Username"
                     value={this.state.usernameLogin}
                     onChangeText={(text) => this.setState({usernameLogin: text})}
                 />
@@ -113,7 +113,7 @@ export class Login extends React.Component {
                     <View style={styles.modalScreen}>
                         <TextInput
                             style = {styles.userInputStyle1}
-                            placeholder="Email"
+                            placeholder="Username"
                             value={this.state.usernameSignup}
                             onChangeText={(text) => this.setState({usernameSignup: text})}
                         />

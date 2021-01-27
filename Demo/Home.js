@@ -18,6 +18,7 @@ import {
   Button,
   Alert,
   TextInput,
+  Animated,
   AsyncStorage,
 } from 'react-native';
 
@@ -33,6 +34,7 @@ const Stack = createStackNavigator();
 const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
+const StepGoal = 10000;
 export class Home extends React.Component {
 
   constructor(props) {
@@ -43,6 +45,7 @@ export class Home extends React.Component {
       DateOfBirth: false,
       Steps: false,
       items: {'2021-01-20': [{name: 'test'}]},
+      StepProgressBar: "",
 
 
     };
@@ -88,6 +91,7 @@ export class Home extends React.Component {
         this.setState({
           Steps: results
         })
+        console.log((this.state.Steps.value/StepGoal * 100).toString())
       })
 
     });
@@ -103,48 +107,63 @@ export class Home extends React.Component {
           <ScrollView
             contentInsetAdjustmentBehavior="automatic"
             style={styles.scrollView}>
-            <View style={styles.body}>
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Weight</Text>
-                {(this.state.Weight) &&
-                  <Text style={styles.sectionDescription}>
-                  {this.state.Weight.value}
-                  </Text>
-                }
-                {(!this.state.Weight) &&
-                  <Text style={styles.sectionDescriptionError}>
-                  Add your Weight to Health App!
-                  </Text>
-                }
-
-              
-              </View>
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Age</Text>
-                {(this.state.DateOfBirth) &&
-                  <Text style={styles.sectionDescription}>
-                  {this.state.DateOfBirth.age}
-                  </Text>
-                }
-                {(!this.state.DateOfBirth) &&
-                  <Text style={styles.sectionDescriptionError}>
-                  Add your Birthday to Health App!
-                  </Text>
-                }
-              </View>
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Steps</Text>
-                {(this.state.Steps) &&
-                  <Text style={styles.sectionDescription}>
-                  {this.state.Steps.value}
-                  </Text>
-                }
-                {(!this.state.Steps) &&
-                  <Text style={styles.sectionDescriptionError}>
-                  Add your steps to Health App!
-                  </Text>
-                }
-              </View>
+            <View style = {styles.container}>
+                
+                <View style={styles.body}>
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>Weight</Text>
+                    {(this.state.Weight) &&
+                    <View style = {{width: "100%"}}>
+                        <View style = {styles.progressBarFilling}>
+                            <Animated.View
+                                style = {[StyleSheet.absoluteFill],  {borderRadius: 20, backgroundColor: "#024878", width: "20%"}}
+                            />
+                        </View>
+                    </View>
+                    // <Text style={styles.sectionDescription}>
+                    // {this.state.Weight.value}
+                    // </Text>
+                    }
+                    {(!this.state.Weight) &&
+                    <Text style={styles.sectionDescriptionError}>
+                    Add your Weight to Health App!
+                    </Text>
+                    }
+                </View>
+                {/* <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>Age</Text>
+                    {(this.state.DateOfBirth) &&
+                    <Text style={styles.sectionDescription}>
+                    {this.state.DateOfBirth.age}
+                    </Text>
+                    }
+                    {(!this.state.DateOfBirth) &&
+                    <Text style={styles.sectionDescriptionError}>
+                    Add your Birthday to Health App!
+                    </Text>
+                    }
+                </View> */}
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>Steps</Text>
+                    {(this.state.Steps) &&
+                    <View style = {{width: "100%"}}>
+                        <View style = {styles.progressBarFilling}>
+                            <Animated.View
+                                style = {[StyleSheet.absoluteFill],  {borderRadius: 20, backgroundColor: "#024878", width: (this.state.Steps.value/StepGoal * 100).toString() + "%"}}
+                            />
+                        </View>
+                    </View>
+                    // <Text style={styles.sectionDescription}>
+                    // {this.state.Steps.value}
+                    // </Text>
+                    }
+                    {(!this.state.Steps) &&
+                    <Text style={styles.sectionDescriptionError}>
+                    Add your steps to Health App!
+                    </Text>
+                    }
+                </View>
+                </View>
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -238,7 +257,7 @@ export class Home extends React.Component {
         <Agenda 
         testID={testIDs.agenda.CONTAINER}
         items={this.state.items}
-        renderEmptyDate={this.renderEmptyDate.bind(this)}
+        renderEmptyData={this.renderEmptyDate.bind(this)}
         renderItem={this.renderItem.bind(this)}
         // loadItemsForMonth={this.loadItems.bind(this)}
         rowHasChanged={this.rowHasChanged.bind(this)}
@@ -273,47 +292,68 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: '#FFF',
-  },
-  body: {
-    backgroundColor: '#FFF',
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#000',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#555',
-  },
-  sectionDescriptionError: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#A00000'
-  },
-  item: {
-    backgroundColor: 'white',
-    flex: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-    marginTop: 17
-  },
-  emptyDate: {
-    height: 15,
-    flex: 1,
-    paddingTop: 30
-  }
-});
+    container: {
+        flex: 1,
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        // backgroundColor: "white",
+
+    },
+    progressBarFilling: {
+        flexDirection: "row",
+        height: 30,
+        width: "100%",
+        borderWidth: 2,
+        borderRadius: 20,
+        borderColor: "black",
+
+    },
+    scrollView: {
+        height: "100%",
+        // backgroundColor: '#FFF',
+    },
+    body: {
+        // backgroundColor: '#FFF',
+    },
+    sectionContainer: {
+        marginTop: 32,
+        paddingHorizontal: 24,
+    },
+    sectionTitle: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000',
+        width: "100%",
+    },
+    sectionDescription: {
+        marginTop: 8,
+        fontSize: 18,
+        fontWeight: '400',
+        color: '#555',
+        width: "100%",
+    },
+    sectionDescriptionError: {
+        marginTop: 8,
+        fontSize: 18,
+        fontWeight: '400',
+        color: '#A00000'
+    },
+    item: {
+        backgroundColor: 'white',
+        flex: 1,
+        borderRadius: 5,
+        padding: 10,
+        marginRight: 10,
+        marginTop: 17
+    },
+    emptyDate: {
+        height: 15,
+        flex: 1,
+        paddingTop: 30
+    }
+    });
 
 const Dynamic = ({ text, changeText }) => {
   return (
