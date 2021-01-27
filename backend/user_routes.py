@@ -1,5 +1,5 @@
 from flask import Blueprint, request, Response
-from createbson import create_user_bson
+from createbson import user_bson
 
 user_api = Blueprint('user_api', __name__)
 
@@ -12,7 +12,7 @@ def create_user():
         user_info = request.json
         result = users_collection.update_one(
             {'username': user_info['username']},
-            {'$setOnInsert': create_user_bson(user_info)},
+            {'$setOnInsert': user_bson(user_info)},
             upsert=True
         )
         
@@ -54,7 +54,7 @@ def update_user():
         user_info = request.json
         result = users_collection.update_one(
             {'username': user_info['username']},
-            {'$set': create_user_bson(user_info)}
+            {'$set': user_bson(user_info)}
         )
         if result.matched_count == 0:
             response = Response('user not found: ' + user_info['username'], 401)
