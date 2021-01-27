@@ -55,7 +55,7 @@ export class Login extends React.Component {
                 secureTextEntry
             />
             <Button
-                onPress={this.props.loginAuth}
+                onPress = {() => this.props.loginAuth(this.state.username, this.state.password)}
                 title="Sign In"
                 color="blue"
             />

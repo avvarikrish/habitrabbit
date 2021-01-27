@@ -264,8 +264,28 @@ export class App extends React.Component {
     );
   }
 
-  loginHandler() {
-    this.setState({userToken: true})
+  loginHandler(username, password) {
+    fetch("http://127.0.0.1:5000/login-user", 
+    {method: "POST",
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email: username,
+      password: password
+    })})
+      .then((response) => {
+        console.log(response)
+        if (response["status"] == 200) {
+          this.setState({userToken: true})
+        } else {
+          
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   SignIn() {
