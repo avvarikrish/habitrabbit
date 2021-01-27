@@ -50,37 +50,67 @@ export class App extends React.Component {
 
     };
     this.loginHandler = this.loginHandler.bind(this);
+    this.signupHandler = this.signupHandler.bind(this);
   }
 
   loginHandler(username, password) {
-    // fetch("http://127.0.0.1:5000/login-user", 
-    // {method: "POST",
-    // headers: {
-    //   Accept: 'application/json',
-    //   'Content-Type': 'application/json'
-    // },
-    // body: JSON.stringify({
-    //   email: username,
-    //   password: password
-    // })})
+    fetch("http://127.0.0.1:5000/login-user", 
+    {
+      method: "POST",
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: username,
+        password: password
+      })
+    })
+      .then((response) => {
+        console.log(response)
+        if (response["status"] == 200) {
+          this.setState({userToken: true})
+        } else {
+          Alert.alert("Invalid Username or Password");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    // this.setState({userToken: true})
+  }
+
+  signupHandler(username, firstname, lastname, password){
+    // fetch("http://127.0.0.1:5000/create-user", 
+    // {
+    //   method: "POST",
+    //   headers: {
+    //     Accept: 'application/json',
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify({
+    //     email: username,
+    //     password: password
+    //   })
+    // })
     //   .then((response) => {
     //     console.log(response)
     //     if (response["status"] == 200) {
     //       this.setState({userToken: true})
     //     } else {
-          
+    //       Alert.alert("Invalid Username or Password");
     //     }
     //   })
     //   .catch((error) => {
     //     console.error(error);
     //   });
-
-    this.setState({userToken: true})
+    console.log(username, firstname, lastname, password);
   }
 
   SignIn() {
     return(
-      <Login loginAuth = {this.loginHandler}/>
+      <Login loginHandler = {this.loginHandler} signupHandler = {this.signupHandler}/>
     );
   }
 
@@ -95,9 +125,9 @@ export class App extends React.Component {
       <NavigationContainer>
         <Stack.Navigator>
           {this.state.userToken == false ? (
-            <Stack.Screen key="test2" name="Sign In" component={this.SignIn.bind(this)} />
+            <Stack.Screen name = "Login" component={this.SignIn.bind(this)} options = {{headerShown: false}}/>
           ) : (
-            <Stack.Screen name=" " component={this.MainPage} />
+            <Stack.Screen name = " " component={this.MainPage}/>
           )}
         </Stack.Navigator>
       </NavigationContainer>
@@ -106,63 +136,53 @@ export class App extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: '#FFF',
-  },
-  body: {
-    backgroundColor: '#FFF',
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#000',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#555',
-  },
-  sectionDescriptionError: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#A00000'
-  },
-  item: {
-    backgroundColor: 'white',
-    flex: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-    marginTop: 17
-  },
-  emptyDate: {
-    height: 15,
-    flex: 1,
-    paddingTop: 30
-  }
-});
+    loginScreen: {
+      flex: 1,
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollView: {
+      backgroundColor: '#FFF',
+    },
+    body: {
+      backgroundColor: '#FFF',
+    },
+    sectionContainer: {
+      marginTop: 32,
+      paddingHorizontal: 24,
+    },
+    sectionTitle: {
+      fontSize: 24,
+      fontWeight: '600',
+      color: '#000',
+    },
+    sectionDescription: {
+      marginTop: 8,
+      fontSize: 18,
+      fontWeight: '400',
+      color: '#555',
+    },
+    sectionDescriptionError: {
+      marginTop: 8,
+      fontSize: 18,
+      fontWeight: '400',
+      color: '#A00000'
+    },
+    item: {
+      backgroundColor: 'white',
+      flex: 1,
+      borderRadius: 5,
+      padding: 10,
+      marginRight: 10,
+      marginTop: 17
+    },
+    emptyDate: {
+      height: 15,
+      flex: 1,
+      paddingTop: 30
+    }
+  });
 
-const Dynamic = ({ text, changeText }) => {
-  return (
-    <TextInput
-      key="textinput1"
-      style={{
-        width: "100%",
-        padding: 10,
-        borderWidth: 1,
-        marginTop: 20,
-        marginBottom: 20
-      }}
-      onChangeText={changeText}
-      value={text}
-    />
-  );
-};
 
 export default App;
