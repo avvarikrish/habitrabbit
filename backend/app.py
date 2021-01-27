@@ -1,11 +1,11 @@
 from flask import Flask
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
-import json
+from user_routes import user_api
 import os
 
 app = Flask(__name__)
-from user_routes import *
+app.register_blueprint(user_api, url_prefix='/users')
 
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/habitrabbit'
 load_dotenv()
