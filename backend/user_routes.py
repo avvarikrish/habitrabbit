@@ -1,44 +1,64 @@
 from flask import Flask, request, Response
 from app import app, users_collection, hr_db
+from createbson import create_user_bson
 
 @app.route('/create-user', methods=['POST'])
 def create_user():
-    user_info = request.json
-    result = users_collection.update_one(
-        {'email': user_info['email']},
-        {'$setOnInsert': user_info},
-        upsert=True
-    )
+    response = Response('success', 200)
+    try:
+        user_info = request.json
+        result = users_collection.update_one(
+            {'email': user_info['email']},
+            {'$setOnInsert': create_user_bson(user_info)},
+            upsert=True
+        )
+        
+        # email already exists
+        if result.matched_count > 0:
+            response = Response('user already exists: ' + user_info['email'], 409)
 
-    # email already exists
-    if result.matched_count > 0:
-        return Response('email already exists: ' + user_info['email'], 409)
+    except KeyError:
+        response = Response('invalid client request', 400)
 
-    return Response('success', 200)
+    finally:
+        return response
 
 @app.route('/login-user', methods=['POST'])
 def login_user():
-    auth_info = request.json
-    result = users_collection.find_one(
-        {'email': auth_info['email']}
-    )
+    response = Response('success', 200)
+    try:
+        auth_info = request.json
+        result = users_collection.find_one(
+            {'email': auth_info['email']}
+        )
 
-    if result == None:
-        return Response('email not found: ' + auth_info['email'], 401)
+        if result == None:
+            response = Response('user not found: ' + auth_info['email'], 401)
 
-    if result['password'] != auth_info['password']:
-        return Response('incorrect password: ' + auth_info['password'], 401)
+        if result['password'] != auth_info['password']:
+            response = Response('incorrect password: ' + auth_info['password'], 401)
 
-    return Response('success', 200)
+    except KeyError:
+        response = Response('invalid client request', 400)
+
+    finally:
+        return response
 
 @app.route('/update-user', methods=['POST'])
 def update_user():
-    user_info = request.json
-    result = users_collection.update_one(
-        {'email': user_info['email']},
-        {'$set': user_info}
-    )
-    if result.matched_count == 0:
-        return Response('user not found: ' + user_info['email'], 401)
+    response = Response('success', 200)
+    try:
+        user_info = request.json
+        result = users_collection.update_one(
+            {'email': user_info['email']},
+            {'$set': create_user_bson(user_info)}
+        )
+        if result.matched_count == 0:
+            response = Response('user not found: ' + user_info['email'], 401)
+    
+    except KeyError:
+        response = Response('invalid client request', 400)
 
-    return Response('success', 200)
+    finally:
+        return response
+
