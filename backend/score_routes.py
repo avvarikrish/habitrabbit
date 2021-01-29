@@ -33,14 +33,22 @@ def get_scores():
         scores_filter = {}
         args = request.args.to_dict()
         scores_filter['username'] = args['username']
+        filter_exists = False
         if 'month' in args:
+            filter_exists = True
             scores_filter['month'] = int(args.get('month'))
         if 'day' in args:
+            filter_exists = True
             scores_filter['day'] = int(args.get('day'))
         if 'year' in args:
+            filter_exists = True
             scores_filter['year'] = int(args.get('year'))
         
-        response = make_response(json_util.dumps(scores_collection.find(scores_filter)), 200)
+        if filter_exists:
+            response = make_response(json_util.dumps(scores_collection.find(scores_filter)), 200)
+        else:
+            date = datetime.now()
+            response = make_response(json_util.dumps(scores_collection.find({'month': date.month, 'day': date.day, 'year': date.year})), 200)
 
     except KeyError:
         response = make_response(Response('invalid client request'), 400)
