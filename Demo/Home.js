@@ -32,6 +32,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
 
+const axios = require('axios');
 const Stack = createStackNavigator();
 const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
@@ -50,23 +51,12 @@ export class Home extends React.Component {
       items: dynamicItems,
       StepProgressBar: "",
       modalVisible: false,
-      date: new Date(),
 
     };
       this.modalOpen = this.modalOpen.bind(this);
       this.modalClose = this.modalClose.bind(this);
-      this.onDateChange = this.onDateChange.bind(this);
       
   }
-
-    onDateChange = (date) => {
-        this.setState({ date: date });
-        dynamicItems[date] = [{name: 'test2'}];
-        this.setState({items: dynamicItems});
-        for (let i in this.items) {
-          console.log(i);
-        }
-    }
 
     modalOpen() {
         this.setState({ modalVisible: true });
@@ -87,6 +77,8 @@ export class Home extends React.Component {
         }
     };
 
+  
+
     AppleHealthKit.initHealthKit(healthKitOptions, (err, results) => {
       if (err) {
         console.log("error initializing Healthkit: ", err);
@@ -104,11 +96,11 @@ export class Home extends React.Component {
 
       // Get Latest Weight
       AppleHealthKit.getLatestWeight(null, (err, results) => {
-        console.log(this.state.Weight);
+        // console.log(this.state.Weight);
         this.setState({
           Weight: results
         })
-        console.log(this.state.Weight.value);
+        // console.log(this.state.Weight.value);
       });
 
       // AppleHealthKit.getLatestHeight(null, (err, result))
@@ -116,7 +108,7 @@ export class Home extends React.Component {
         this.setState({
           Steps: results
         })
-        console.log((this.state.Steps.value/StepGoal * 100).toString())
+        // console.log((this.state.Steps.value/StepGoal * 100).toString())
       })
 
     });
@@ -266,93 +258,91 @@ export class Home extends React.Component {
   //   // }, 10);
   // }
 
-
+  onDayPress(day) {
+    console.log(day);
+    axios.get('http://127.0.0.1:5000/scores/get-scores', {
+      params: {
+        username: 'a', 
+        month: day.month, 
+        day: day.day, 
+        year: day.year,
+      },
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      console.log(response.data);
+    })
+    .catch(function (error) {
+      console.log(error);
+    })
+    .then(function () {
+      // always executed
+    });
+  }
 
   CalendarScreen() {
     return (
       <View style={{ flex: 1}}>
-        {/* <Agenda
-        // testID={testIDs.agenda.CONTAINER}
-        items={this.state.items}
-        loadItemsForMonth={this.loadItems.bind(this)}
-        selected={'2020-11-29'}
-        renderItem={this.renderItem.bind(this)}
-        // renderEmptyDate={this.renderEmptyDate.bind(this)}
-        // rowHasChanged={this.rowHasChanged.bind(this)} 
-        /> */}
-
         <Agenda 
-                testID={testIDs.agenda.CONTAINER}
-                items={this.state.items}
-                renderEmptyData={this.renderEmptyDate.bind(this)}
-                renderItem={this.renderItem.bind(this)}
-                // loadItemsForMonth={this.loadItems.bind(this)}
-                rowHasChanged={this.rowHasChanged.bind(this)}
-                renderItem={this.renderItem.bind(this)}
+          testID={testIDs.agenda.CONTAINER}
+          items={this.state.items}
+          renderEmptyData={this.renderEmptyDate.bind(this)}
+          renderItem={this.renderItem.bind(this)}
+          // loadItemsForMonth={this.loadItems.bind(this)}
+          rowHasChanged={this.rowHasChanged.bind(this)}
+          renderItem={this.renderItem.bind(this)}
+          onDayPress={this.onDayPress.bind(this)}
                 
-            />
-            <View
-                style={{
-                    alignSelf: 'flex-end',
-                    paddingBottom: 10,
-                    paddingRight: 10,
-                }}
+        />
+        <View
+          style={{
+              alignSelf: 'flex-end',
+              paddingBottom: 10,
+              paddingRight: 10,
+          }}
+        >
+          <TouchableOpacity
+            onPress={this.modalOpen}
+            style={{
+                borderWidth: 2,
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+                alignItems: 'center',
+                width: 100,
+                height: 100,
+                backgroundColor: '#024878',
+                borderRadius: 50,
+            }}
+          >
+            <Text
+              style={{
+                textAlign: 'center',
+                paddingTop: 15,
+                fontSize: 50,
+                color: '#FFF'   
+              }}
             >
-                <TouchableOpacity
-                    onPress={this.modalOpen}
-                    style={{
-                        borderWidth: 2,
-                        borderColor: 'rgba(0, 0, 0, 0.2)',
-                        alignItems: 'center',
-                        width: 100,
-                        height: 100,
-                        backgroundColor: '#024878',
-                        borderRadius: 50,
-                    }}
-                >
-                    <Text
-                        style={{
-                            textAlign: 'center',
-                            paddingTop: 15,
-                            fontSize: 50,
-                            color: '#FFF'
-                            
-                        }}
-                    >
-                        +
-                    </Text>   
-                </TouchableOpacity>
-                <Modal
-                    animationType="slide"
-                    visible={this.state.modalVisible}
-                >
-                    <View
-                        style={{
-                            paddingTop: 100,
-                            alignItems: 'center',
-                        }}
-                    >
-                      
-                        <TouchableOpacity
-                            onPress={this.modalClose}
-                        >
-                            <Text>Done</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <SafeAreaView>
-                        <View>
-                            <DatePickerIOS
-                                date={this.date}
-                                onDateChange={this.onDateChange}
-                                initialDate={new Date()}
-                            />
-                        </View>
-                    </SafeAreaView>
-                    
-                </Modal>
-            </View>
-        
+              +
+            </Text>   
+          </TouchableOpacity>
+          <Modal
+            animationType="slide"
+            visible={this.state.modalVisible}
+          >
+            <TouchableOpacity
+              style = {{
+                marginTop: 100,
+                alignItems: 'center',
+              }}
+              onPress = {this.modalClose}
+            >
+              <Text>Done</Text>
+            </TouchableOpacity>
+          </Modal>
         </View>
+      </View>
     );
   }
 
@@ -374,7 +364,7 @@ export class Home extends React.Component {
     return (
         <Tab.Navigator>
           <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} />
-          <Tab.Screen name="Settings" component={this.CalendarScreen.bind(this)} />
+          <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
   }
@@ -442,7 +432,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
         paddingTop: 30
-    }
+    }, 
+    userInputStyle: {
+      height: "5%", 
+      width: "75%", 
+      borderBottomColor: "#024878",
+      borderBottomWidth: 2,
+      marginBottom: "10%",
+    },
     });
 
 const Dynamic = ({ text, changeText }) => {
