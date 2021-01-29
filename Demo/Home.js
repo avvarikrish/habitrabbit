@@ -19,6 +19,8 @@ import {
   Alert,
   TextInput,
   Animated,
+  Modal,
+  DatePickerIOS,
   AsyncStorage,
 } from 'react-native';
 
@@ -27,7 +29,7 @@ import { Login } from './Login.js';
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import {Calendar, CalendarList, Agenda} from 'react-native-calendars';
+import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
 
 const Stack = createStackNavigator();
@@ -35,6 +37,7 @@ const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
+const dynamicItems = {'2021-01-20': [{name: 'test'}]};
 export class Home extends React.Component {
 
   constructor(props) {
@@ -44,12 +47,34 @@ export class Home extends React.Component {
       Height: false,
       DateOfBirth: false,
       Steps: false,
-      items: {'2021-01-20': [{name: 'test'}]},
+      items: dynamicItems,
       StepProgressBar: "",
-
+      modalVisible: false,
+      date: new Date(),
 
     };
+      this.modalOpen = this.modalOpen.bind(this);
+      this.modalClose = this.modalClose.bind(this);
+      this.onDateChange = this.onDateChange.bind(this);
+      
   }
+
+    onDateChange = (date) => {
+        this.setState({ date: date });
+        dynamicItems[date] = [{name: 'test2'}];
+        this.setState({items: dynamicItems});
+        for (let i in this.items) {
+          console.log(i);
+        }
+    }
+
+    modalOpen() {
+        this.setState({ modalVisible: true });
+    }
+
+    modalClose() {
+        this.setState({ modalVisible: false });
+    }
 
   componentDidMount() {
     const healthKitOptions = {
@@ -212,7 +237,9 @@ export class Home extends React.Component {
   renderEmptyDate() {
     return (
       <View style={styles.emptyDate}>
-        <Text>This is empty date!</Text>
+            <Text style={{ color: '#cccccc', }}>
+                There's nothing here
+            </Text>
       </View>
     );
   }
@@ -255,15 +282,77 @@ export class Home extends React.Component {
         /> */}
 
         <Agenda 
-        testID={testIDs.agenda.CONTAINER}
-        items={this.state.items}
-        renderEmptyData={this.renderEmptyDate.bind(this)}
-        renderItem={this.renderItem.bind(this)}
-        // loadItemsForMonth={this.loadItems.bind(this)}
-        rowHasChanged={this.rowHasChanged.bind(this)}
-        renderItem={this.renderItem.bind(this)}
-        />
-      </View>
+                testID={testIDs.agenda.CONTAINER}
+                items={this.state.items}
+                renderEmptyData={this.renderEmptyDate.bind(this)}
+                renderItem={this.renderItem.bind(this)}
+                // loadItemsForMonth={this.loadItems.bind(this)}
+                rowHasChanged={this.rowHasChanged.bind(this)}
+                renderItem={this.renderItem.bind(this)}
+                
+            />
+            <View
+                style={{
+                    alignSelf: 'flex-end',
+                    paddingBottom: 10,
+                    paddingRight: 10,
+                }}
+            >
+                <TouchableOpacity
+                    onPress={this.modalOpen}
+                    style={{
+                        borderWidth: 2,
+                        borderColor: 'rgba(0, 0, 0, 0.2)',
+                        alignItems: 'center',
+                        width: 100,
+                        height: 100,
+                        backgroundColor: '#024878',
+                        borderRadius: 50,
+                    }}
+                >
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingTop: 15,
+                            fontSize: 50,
+                            color: '#FFF'
+                            
+                        }}
+                    >
+                        +
+                    </Text>   
+                </TouchableOpacity>
+                <Modal
+                    animationType="slide"
+                    visible={this.state.modalVisible}
+                >
+                    <View
+                        style={{
+                            paddingTop: 100,
+                            alignItems: 'center',
+                        }}
+                    >
+                      
+                        <TouchableOpacity
+                            onPress={this.modalClose}
+                        >
+                            <Text>Done</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <SafeAreaView>
+                        <View>
+                            <DatePickerIOS
+                                date={this.date}
+                                onDateChange={this.onDateChange}
+                                initialDate={new Date()}
+                            />
+                        </View>
+                    </SafeAreaView>
+                    
+                </Modal>
+            </View>
+        
+        </View>
     );
   }
 
@@ -350,6 +439,7 @@ const styles = StyleSheet.create({
     },
     emptyDate: {
         height: 15,
+        alignItems: 'center',
         flex: 1,
         paddingTop: 30
     }
