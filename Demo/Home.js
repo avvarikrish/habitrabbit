@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 import { Login } from './Login.js';
+import * as Progress from 'react-native-progress';
 
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -124,18 +125,27 @@ export class Home extends React.Component {
           <ScrollView
             contentInsetAdjustmentBehavior="automatic"
             style={styles.scrollView}>
+            <View style = {styles.todayHeader}>
+                <Text style={styles.todayText}>Today</Text>
+            </View>
             <View style = {styles.container}>
+                
                 
                 <View style={styles.body}>
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>Weight</Text>
+                    {/* <Text style={styles.sectionTitle}>Weight</Text> */}
                     {(this.state.Weight) &&
                     <View style = {{width: "100%"}}>
-                        <View style = {styles.progressBarFilling}>
+                        <Progress.Bar style = {{width: "100%"}} progress={.8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                            <Text style = {styles.progressBarMainText}>Weight</Text>
+                            <Text style = {styles.progressBarSubText}>Today: {this.state.Weight.value} / 10</Text>
+
+                        </Progress.Bar>
+                        {/* <View style = {styles.progressBar}>
                             <Animated.View
-                                style = {[StyleSheet.absoluteFill],  {borderRadius: 20, backgroundColor: "#024878", width: "20%"}}
+                                style = {[StyleSheet.absoluteFill], {borderRadius: 17, backgroundColor: "#024878",width: "80%"}}
                             />
-                        </View>
+                        </View> */}
                     </View>
                     // <Text style={styles.sectionDescription}>
                     // {this.state.Weight.value}
@@ -161,14 +171,19 @@ export class Home extends React.Component {
                     }
                 </View> */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>Steps</Text>
                     {(this.state.Steps) &&
                     <View style = {{width: "100%"}}>
-                        <View style = {styles.progressBarFilling}>
+                        <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                            <Text style = {styles.progressBarMainText}>Steps</Text>
+                            <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {StepGoal}</Text>
+
+                        </Progress.Bar>
+                        {/* <Text style={styles.sectionTitle}>Steps ({this.state.Steps.value}/{StepGoal})</Text>
+                        <View style = {styles.progressBar}>
                             <Animated.View
-                                style = {[StyleSheet.absoluteFill],  {borderRadius: 20, backgroundColor: "#024878", width: (this.state.Steps.value/StepGoal * 100).toString() + "%"}}
+                                style = {[StyleSheet.absoluteFill],{borderRadius: 17, backgroundColor: "#024878",width: (this.state.Steps.value/StepGoal * 100).toString() + "%"}}
                             />
-                        </View>
+                        </View> */}
                     </View>
                     // <Text style={styles.sectionDescription}>
                     // {this.state.Steps.value}
@@ -179,6 +194,14 @@ export class Home extends React.Component {
                     Add your steps to Health App!
                     </Text>
                     }
+                </View>
+                <View style={styles.sectionContainer}>
+                    <View style = {{width: "100%"}}>
+                        <Progress.Bar style = {{width: "100%"}} progress={7/8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                            <Text style = {styles.progressBarMainText}>Sleep</Text>
+                            <Text style = {styles.progressBarSubText}>Today: {7} / 8</Text>
+                        </Progress.Bar>
+                    </View>
                 </View>
                 </View>
             </View>
@@ -286,6 +309,7 @@ export class Home extends React.Component {
   CalendarScreen() {
     return (
       <View style={{ flex: 1}}>
+          
         <Agenda 
           testID={testIDs.agenda.CONTAINER}
           items={this.state.items}
@@ -371,23 +395,53 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    progressBarMainText: {
+        position: "absolute",
+        marginTop: 14,
+        marginLeft: "3%",
+        color: "black",
+        fontSize: 20,
+        fontFamily:"Avenir-Light",
+    },
+    progressBarSubText: {
+        position: "absolute",
+        marginTop: 42,
+        marginLeft: "3%",
+        color: "white",
+        fontFamily: "Avenir-Light",
+    },
+    todayText: {
+        fontFamily: "Avenir-Light",
+        fontSize: 30,
+    },
+    todayHeader: {
+        textAlign: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 10
+    },
     container: {
         flex: 1,
         flexDirection: "column",
         justifyContent: "center",
-        alignItems: "center",
+        // alignItems: "center",
         height: "100%",
         // backgroundColor: "white",
 
     },
-    progressBarFilling: {
+    progressBar: {
         flexDirection: "row",
-        height: 30,
+        height: 60,
         width: "100%",
         borderWidth: 2,
         borderRadius: 20,
         borderColor: "black",
 
+    },
+    progressBarFilling: {
+        borderRadius: 20, 
+        backgroundColor: "#024878", 
+        // width: "50%",
     },
     scrollView: {
         height: "100%",
