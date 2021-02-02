@@ -1,32 +1,39 @@
-def user_bson(user_info):
-    return {
+def user_bson(user_info, call_type):
+    bson_value = {
         'username': user_info['username'],
         'first_name': user_info['first_name'],
         'last_name': user_info['last_name'],
         'password': user_info['password']
     }
+    if call_type == 'create':
+        bson_value['goals'] = {
+            'sleep': user_goal_bson(8, 0.5),
+            'steps': user_goal_bson(10000, 0.5)
+        }
 
-def score_bson(score_info, month, day, year):
-    sleep_score = score_info['sleep']['current_value'] * score_info['sleep']['weight'] / score_info['sleep']['goal']
-    steps_score = score_info['steps']['current_value'] * score_info['steps']['weight'] / score_info['steps']['goal']
+    return bson_value
+
+def score_bson(username, month, day, year, sleep_score, steps_score):
     return {
-        'username': score_info['username'],
-        'cumulative_score': sleep_score + steps_score,
+        'username': username,
+        'cumulative_score': (sleep_score.score() * sleep_score.weight()) + (steps_score.score() * steps_score.weight()),
         'month': month,
         'day': day,
         'year': year,
         'subscores': {
-            'sleep': {
-                'score': sleep_score,
-                'weight': score_info['sleep']['weight'],
-                'current_value': score_info['sleep']['current_value'],
-                'goal': score_info['sleep']['goal']
-            },
-            'steps': {
-                'score': steps_score,
-                'weight': score_info['steps']['weight'],
-                'current_value': score_info['steps']['current_value'],
-                'goal': score_info['steps']['goal']
-            }
+            'sleep': sleep_score.bson(),
+            'steps': steps_score.bson()
         }
+    }
+
+def goals_bson(goals_info):
+    return {
+        'sleep' : user_goal_bson(goals_info['sleep']['goal'], goals_info['sleep']['weight']),
+        'steps' : user_goal_bson(goals_info['steps']['goal'], goals_info['steps']['weight'])
+    }
+
+def user_goal_bson(value, weight):
+    return {
+        'goal': value,
+        'weight': weight
     }

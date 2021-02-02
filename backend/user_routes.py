@@ -12,7 +12,7 @@ def create_user():
         user_info = request.json
         result = users_collection.update_one(
             {'username': user_info['username']},
-            {'$setOnInsert': user_bson(user_info)},
+            {'$setOnInsert': user_bson(user_info, 'create')},
             upsert=True
         )
         
@@ -54,7 +54,7 @@ def update_user():
         user_info = request.json
         result = users_collection.update_one(
             {'username': user_info['username']},
-            {'$set': user_bson(user_info)}
+            {'$set': user_bson(user_info, 'update')}
         )
         if result.matched_count == 0:
             response = Response('user not found: ' + user_info['username'], 401)
