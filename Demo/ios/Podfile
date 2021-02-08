@@ -10,6 +10,8 @@ target 'Demo' do
 
   pod 'RCTAppleHealthKit', :path => '../node_modules/rn-apple-healthkit'
 
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+
   target 'DemoTests' do
     inherit! :complete
     # Pods for testing

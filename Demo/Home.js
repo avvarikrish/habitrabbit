@@ -26,7 +26,7 @@ import {
 
 import { Login } from './Login.js';
 import * as Progress from 'react-native-progress';
-
+// import {Picker} from '@react-native-picker/picker';
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -40,6 +40,7 @@ const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
 const dynamicItems = {'2021-01-20': [{name: 'test'}]};
+const sleepNumbers = [{ id: "sleep", label: "", min: 0, max: 24 }];
 export class Home extends React.Component {
 
   constructor(props) {
@@ -49,13 +50,24 @@ export class Home extends React.Component {
       Height: false,
       DateOfBirth: false,
       Steps: false,
+      StepWeight: 50,
+      StepGoal: 10000,
       items: dynamicItems,
       StepProgressBar: "",
       modalVisible: false,
+      Sleep: 7,
+      SleepWeight: 50,
+      SleepGoal: 8,
+      SleepInput: "0",
+      modalScoreVisible: false,
+
 
     };
       this.modalOpen = this.modalOpen.bind(this);
       this.modalClose = this.modalClose.bind(this);
+      this.modalScoreOpen = this.modalScoreOpen.bind(this);
+      this.modalScoreClose = this.modalScoreClose.bind(this);
+    //   this.scoreCalculation = this.scoreCalculation.bind(this);
       
   }
 
@@ -65,6 +77,14 @@ export class Home extends React.Component {
 
     modalClose() {
         this.setState({ modalVisible: false });
+    }
+
+    modalScoreOpen() {
+        this.setState({ modalScoreVisible: true });
+    }
+
+    modalScoreClose() {
+        this.setState({ modalScoreVisible: false });
     }
 
   componentDidMount() {
@@ -78,45 +98,32 @@ export class Home extends React.Component {
         }
     };
 
-  
-
     AppleHealthKit.initHealthKit(healthKitOptions, (err, results) => {
       if (err) {
         console.log("error initializing Healthkit: ", err);
         return;
       }
 
-      // Date of Birth Example
-      AppleHealthKit.getDateOfBirth(null, (err, results) => {
-        console.log("asdfasdf");
-        this.setState({
-          DateOfBirth: results
-        })
-        
-      });
-
-      // Get Latest Weight
-      AppleHealthKit.getLatestWeight(null, (err, results) => {
-        // console.log(this.state.Weight);
-        this.setState({
-          Weight: results
-        })
-        // console.log(this.state.Weight.value);
-      });
-
       // AppleHealthKit.getLatestHeight(null, (err, result))
       AppleHealthKit.getStepCount(null, (err, results) => {
         this.setState({
           Steps: results
         })
-        // console.log((this.state.Steps.value/StepGoal * 100).toString())
       })
+
+      //API calls to data base getting sleep and weights etc.
 
     });
   }
-
   
   HomeScreen() {
+    let data = [{
+        value: 'Banana',
+      }, {
+        value: 'Mango',
+      }, {
+        value: 'Pear',
+      }];
     
     return (
       <View>
@@ -130,80 +137,58 @@ export class Home extends React.Component {
             </View>
             <View style = {styles.container}>
                 
-                
+                {(this.state.Steps && this.state.Sleep && this.state.SleepWeight && this.state.StepWeight) &&
+                <View style = {styles.todayHeader}>
+                    <Text>Current Score: {this.state.Steps.value/this.state.StepGoal * this.state.StepWeight + this.state.Sleep/this.state.SleepGoal * this.state.SleepWeight}</Text>
+                </View>
+                }
                 <View style={styles.body}>
-                <View style={styles.sectionContainer}>
-                    {/* <Text style={styles.sectionTitle}>Weight</Text> */}
-                    {(this.state.Weight) &&
-                    <View style = {{width: "100%"}}>
-                        <Progress.Bar style = {{width: "100%"}} progress={.8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                            <Text style = {styles.progressBarMainText}>Weight</Text>
-                            <Text style = {styles.progressBarSubText}>Today: {this.state.Weight.value} / 10</Text>
+                    <View style={styles.sectionContainer}>
+                        {(this.state.Steps) &&
+                        <View style = {{width: "100%"}}>
+                            <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                                <Text style = {styles.progressBarMainText}>Steps</Text>
+                                <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {StepGoal}</Text>
+                            </Progress.Bar>
+                        </View>
+                        }
+                        {(!this.state.Steps) &&
+                        <Text style={styles.sectionDescriptionError}>
+                        Add your steps to Health App!
+                        </Text>
+                        }
+                    </View>
+                    <View style={styles.sectionContainer}>
+                        <View style = {{width: "100%"}}>
+                            <Progress.Bar style = {{width: "100%"}} progress={7/8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                                <Text style = {styles.progressBarMainText}>Sleep</Text>
+                                <Text style = {styles.progressBarSubText}>Today: {7} / 8</Text>
+                            </Progress.Bar>
+                        </View>
+                    </View>
+                </View>
+                <Button onPress={this.modalScoreOpen} title = "ASDF"/>
+                <Modal
+                animationType="slide"
+                visible={this.state.modalScoreVisible}
+                >
+                    <SafeAreaView>
+                        <View style = {{alignItems: "center", justifyContent: "center"}}>
 
-                        </Progress.Bar>
-                        {/* <View style = {styles.progressBar}>
-                            <Animated.View
-                                style = {[StyleSheet.absoluteFill], {borderRadius: 17, backgroundColor: "#024878",width: "80%"}}
-                            />
-                        </View> */}
-                    </View>
-                    // <Text style={styles.sectionDescription}>
-                    // {this.state.Weight.value}
-                    // </Text>
-                    }
-                    {(!this.state.Weight) &&
-                    <Text style={styles.sectionDescriptionError}>
-                    Add your Weight to Health App!
-                    </Text>
-                    }
-                </View>
-                {/* <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>Age</Text>
-                    {(this.state.DateOfBirth) &&
-                    <Text style={styles.sectionDescription}>
-                    {this.state.DateOfBirth.age}
-                    </Text>
-                    }
-                    {(!this.state.DateOfBirth) &&
-                    <Text style={styles.sectionDescriptionError}>
-                    Add your Birthday to Health App!
-                    </Text>
-                    }
-                </View> */}
-                <View style={styles.sectionContainer}>
-                    {(this.state.Steps) &&
-                    <View style = {{width: "100%"}}>
-                        <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                            <Text style = {styles.progressBarMainText}>Steps</Text>
-                            <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {StepGoal}</Text>
-
-                        </Progress.Bar>
-                        {/* <Text style={styles.sectionTitle}>Steps ({this.state.Steps.value}/{StepGoal})</Text>
-                        <View style = {styles.progressBar}>
-                            <Animated.View
-                                style = {[StyleSheet.absoluteFill],{borderRadius: 17, backgroundColor: "#024878",width: (this.state.Steps.value/StepGoal * 100).toString() + "%"}}
-                            />
-                        </View> */}
-                    </View>
-                    // <Text style={styles.sectionDescription}>
-                    // {this.state.Steps.value}
-                    // </Text>
-                    }
-                    {(!this.state.Steps) &&
-                    <Text style={styles.sectionDescriptionError}>
-                    Add your steps to Health App!
-                    </Text>
-                    }
-                </View>
-                <View style={styles.sectionContainer}>
-                    <View style = {{width: "100%"}}>
-                        <Progress.Bar style = {{width: "100%"}} progress={7/8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                            <Text style = {styles.progressBarMainText}>Sleep</Text>
-                            <Text style = {styles.progressBarSubText}>Today: {7} / 8</Text>
-                        </Progress.Bar>
-                    </View>
-                </View>
-                </View>
+                            <TouchableOpacity style = {styles.sleepInputModalButton} onPress = {this.modalScoreClose}>
+                                <Text style = {{fontSize: 20}}>
+                                    X
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity>
+                                <Text>
+                                    Test
+                                </Text>
+                            </TouchableOpacity>
+                            
+                        </View>
+                    </SafeAreaView>
+                </Modal>
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -355,15 +340,16 @@ export class Home extends React.Component {
             animationType="slide"
             visible={this.state.modalVisible}
           >
-            <TouchableOpacity
-              style = {{
-                marginTop: 100,
-                alignItems: 'center',
-              }}
-              onPress = {this.modalClose}
-            >
-              <Text>Done</Text>
-            </TouchableOpacity>
+            <SafeAreaView>
+                <TouchableOpacity
+                style = {{
+                    alignItems: 'center',
+                }}
+                onPress = {this.modalClose}
+                >
+                    <Text>Done</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
           </Modal>
         </View>
       </View>
@@ -395,6 +381,10 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    sleepInputModalButton: {
+        alignSelf: "flex-end",
+        marginRight: "5%",
+    },
     progressBarMainText: {
         position: "absolute",
         marginTop: 14,
