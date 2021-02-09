@@ -10,22 +10,43 @@ from app import scores_collection, users_collection
 
 @scores_api.route('/add-score', methods=['POST'])
 def add_score():
-    response = Response('success', 200)
+    response = {}
     try:
         score_info = request.json
         username = score_info['username']
         date = datetime.now()
         month, day, year = date.month, date.day, date.year
-        user = users_collection.find_one({'username': username})
-        sleep_score = Subscore(user['goals']['sleep']['goal'], user['goals']['sleep']['weight'], score_info['sleep'])
-        steps_score = Subscore(user['goals']['steps']['goal'], user['goals']['steps']['weight'], score_info['steps'])
 
-        scores_collection.update_one({'username': score_info['username'], 'month': month, 'day': day, 'year': year},
-                                    {'$set': score_bson(username, month, day, year, sleep_score, steps_score)},
-                                    upsert=True)
+        user = users_collection.find_one({'username': username})
+        if user is None:
+            response = make_response(Response('user not found: ' + username), 401)
+        else:
+            user_score = scores_collection.find_one({'username': username, 'month': month, 'day': day, 'year': year})
+            sleep_value, steps_value = 0, 0
+            if 'sleep' in score_info:
+                sleep_value = score_info['sleep']
+            if 'steps' in score_info:
+                steps_value = score_info['steps']
+
+            if user_score is not None:
+                if 'sleep' not in score_info:
+                    sleep_value = user_score['subscores']['sleep']['value']
+                
+                if 'steps' not in score_info:
+                    steps_value = user_score['subscores']['steps']['value']
+            
+            sleep_score = Subscore(user['goals']['sleep']['goal'], user['goals']['sleep']['weight'], sleep_value)
+            steps_score = Subscore(user['goals']['steps']['goal'], user['goals']['steps']['weight'], steps_value)
+
+            new_score_bson = score_bson(username, month, day, year, sleep_score, steps_score)
+            scores_collection.update_one({'username': username, 'month': month, 'day': day, 'year': year},
+                                        {'$set': new_score_bson},
+                                        upsert=True)
+
+            response = make_response(json_util.dumps(new_score_bson), 200)
     
     except KeyError:
-        response = Response('invalid client request', 400)
+        response = make_response(Response('invalid client request'), 400)
 
     finally:
         return response
