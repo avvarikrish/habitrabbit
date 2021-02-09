@@ -37,3 +37,15 @@ def user_goal_bson(value, weight):
         'goal': value,
         'weight': weight
     }
+
+def index_bson(longitude, latitude):
+    return {
+        'geometry' : {
+            'type': 'Point',
+            'coordinates' : [longitude, latitude],
+        },
+        'properties': {
+            'longitude': longitude,
+            'latitude': latitude
+        }
+    }
