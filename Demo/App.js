@@ -54,31 +54,30 @@ export class App extends React.Component {
   }
 
   loginHandler(username, password) {
-    // fetch("http://127.0.0.1:5000/users/login-user", 
-    // {
-    //   method: "POST",
-    //   headers: {
-    //     Accept: 'application/json',
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     username: username,
-    //     password: password
-    //   })
-    // })
-    //   .then((response) => {
-    //     console.log(response)
-    //     if (response["status"] == 200) {
-    //       this.setState({userToken: true})
-    //     } else {
-    //       Alert.alert("Invalid Username or Password");
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //   });
+    fetch("http://127.0.0.1:5000/users/login-user", 
+    {
+      method: "POST",
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password
+      })
+    })
+      .then((response) => {
+        if (response["status"] == 200) {
+          this.setState({userToken: true, username: username});
+        } else {
+          Alert.alert("Invalid Username or Password");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
 
-    this.setState({userToken: true})
+    // this.setState({userToken: true})
   }
 
   signupHandler(username, first_name, last_name, password){
@@ -97,9 +96,8 @@ export class App extends React.Component {
       })
     })
       .then((response) => {
-        console.log(response)
         if (response["status"] == 200) {
-          this.setState({userToken: true})
+          this.setState({userToken: true, username: username});
         } else {
           Alert.alert("Invalid Sign Up");
         }
@@ -118,7 +116,7 @@ export class App extends React.Component {
 
   MainPage() {
     return(
-      <Home/>
+      <Home username = {this.state.username}/>
     );
   }
 
@@ -129,7 +127,7 @@ export class App extends React.Component {
           {this.state.userToken == false ? (
             <Stack.Screen name = "Login" component={this.SignIn.bind(this)} options = {{headerShown: false}}/>
           ) : (
-            <Stack.Screen name = " " component={this.MainPage}/>
+            <Stack.Screen name = " " component={this.MainPage.bind(this)}/>
           )}
         </Stack.Navigator>
       </NavigationContainer>
