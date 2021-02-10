@@ -21,7 +21,7 @@ import {
   Animated,
   Modal,
   DatePickerIOS,
-  AsyncStorage,
+  RefreshControl,
 } from 'react-native';
 
 import { Login } from './Login.js';
@@ -41,34 +41,35 @@ const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
 const dynamicItems = {'2021-01-20': [{name: 'test'}]};
 const sleepNumbers = [{ id: "sleep", label: "", min: 0, max: 24 }];
+
 export class Home extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      Weight: false,
-      Height: false,
-      DateOfBirth: false,
       Steps: false,
-      StepWeight: 50,
-      StepGoal: 10000,
+      StepWeight: false,
+      StepGoal: false,
       items: dynamicItems,
       StepProgressBar: "",
       modalVisible: false,
-      Sleep: 7,
-      SleepWeight: 50,
-      SleepGoal: 8,
+      Sleep: false,
+      SleepWeight: false,
+      SleepGoal: false,
       SleepInput: "0",
       modalScoreVisible: false,
-
-
+      CumulativeScore: false,
+      refreshing: false,
     };
-      this.modalOpen = this.modalOpen.bind(this);
-      this.modalClose = this.modalClose.bind(this);
-      this.modalScoreOpen = this.modalScoreOpen.bind(this);
-      this.modalScoreClose = this.modalScoreClose.bind(this);
-    //   this.scoreCalculation = this.scoreCalculation.bind(this);
-      
+
+    this.modalOpen = this.modalOpen.bind(this);
+    this.modalClose = this.modalClose.bind(this);
+    this.modalScoreOpen = this.modalScoreOpen.bind(this);
+    this.modalScoreClose = this.modalScoreClose.bind(this);
+    this.getAppleHealthData = this.getAppleHealthData.bind(this);
+    this.getDataFromDatabase = this.getDataFromDatabase.bind(this);
+    this.refreshScreen = this.refreshScreen.bind(this);
+    this.inputAppleHealthIntoDatabase = this.inputAppleHealthIntoDatabase.bind(this);
   }
 
     modalOpen() {
@@ -87,112 +88,197 @@ export class Home extends React.Component {
         this.setState({ modalScoreVisible: false });
     }
 
-  componentDidMount() {
-    const healthKitOptions = {
-        permissions: {
-            read:  [
-                PERMS.DateOfBirth,
-                PERMS.Weight,
-                PERMS.StepCount
-            ]
-        }
-    };
+    async getAppleHealthData() {
+        const healthKitOptions = {
+            permissions: {
+                read:  [
+                    PERMS.DateOfBirth,
+                    PERMS.Weight,
+                    PERMS.StepCount
+                ]
+            }
+        };
 
-    AppleHealthKit.initHealthKit(healthKitOptions, (err, results) => {
-      if (err) {
-        console.log("error initializing Healthkit: ", err);
-        return;
-      }
+        AppleHealthKit.initHealthKit(healthKitOptions, (err, results) => {
+            if (err) {
+            console.log("error initializing Healthkit: ", err);
+            return;
+            }
 
-      // AppleHealthKit.getLatestHeight(null, (err, result))
-      AppleHealthKit.getStepCount(null, (err, results) => {
-        this.setState({
-          Steps: results
+            AppleHealthKit.getStepCount(null, (err, results) => {
+                this.setState({
+                    Steps: results
+                });
+            })
         })
-      })
+    }
 
-      //API calls to data base getting sleep and weights etc.
-
-    });
-  }
-  
-  HomeScreen() {
-    let data = [{
-        value: 'Banana',
-      }, {
-        value: 'Mango',
-      }, {
-        value: 'Pear',
-      }];
-    
-    return (
-      <View>
-        <StatusBar barStyle="dark-content" />
-        <SafeAreaView>
-          <ScrollView
-            contentInsetAdjustmentBehavior="automatic"
-            style={styles.scrollView}>
-            <View style = {styles.todayHeader}>
-                <Text style={styles.todayText}>Today</Text>
-            </View>
-            <View style = {styles.container}>
+    async getDataFromDatabase() {
+        const url = "http://127.0.0.1:5000/scores/get-scores";
+        await axios.get(url, {
+            params: {
+                username: this.props.username, 
+            },
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
+        }).then((response) => {
+            if (response.data != []){
+                this.setState({Sleep: response.data[0].subscores.sleep.value, SleepWeight: response.data[0].subscores.sleep.weight, 
+                    SleepGoal: response.data[0].subscores.sleep.goal, StepGoal: response.data[0].subscores.steps.goal, StepWeight: response.data[0].subscores.steps.weight,
+                    CumulativeScore: response.data[0].cumulative_score,
                 
-                {(this.state.Steps && this.state.Sleep && this.state.SleepWeight && this.state.StepWeight) &&
-                <View style = {styles.todayHeader}>
-                    <Text>Current Score: {this.state.Steps.value/this.state.StepGoal * this.state.StepWeight + this.state.Sleep/this.state.SleepGoal * this.state.SleepWeight}</Text>
-                </View>
-                }
-                <View style={styles.body}>
-                    <View style={styles.sectionContainer}>
-                        {(this.state.Steps) &&
-                        <View style = {{width: "100%"}}>
-                            <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                                <Text style = {styles.progressBarMainText}>Steps</Text>
-                                <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {StepGoal}</Text>
-                            </Progress.Bar>
-                        </View>
-                        }
-                        {(!this.state.Steps) &&
-                        <Text style={styles.sectionDescriptionError}>
-                        Add your steps to Health App!
-                        </Text>
-                        }
-                    </View>
-                    <View style={styles.sectionContainer}>
-                        <View style = {{width: "100%"}}>
-                            <Progress.Bar style = {{width: "100%"}} progress={7/8} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                                <Text style = {styles.progressBarMainText}>Sleep</Text>
-                                <Text style = {styles.progressBarSubText}>Today: {7} / 8</Text>
-                            </Progress.Bar>
-                        </View>
-                    </View>
-                </View>
-                <Button onPress={this.modalScoreOpen} title = "ASDF"/>
-                <Modal
-                animationType="slide"
-                visible={this.state.modalScoreVisible}
-                >
-                    <SafeAreaView>
-                        <View style = {{alignItems: "center", justifyContent: "center"}}>
+                })
+            }
+        }).catch((response) => {
+            console.log(response);
+        })
+    }
 
-                            <TouchableOpacity style = {styles.sleepInputModalButton} onPress = {this.modalScoreClose}>
-                                <Text style = {{fontSize: 20}}>
-                                    X
+    async componentDidMount() {
+        //API calls to data base getting sleep and weights etc.
+        await this.getAppleHealthData();
+        await this.getDataFromDatabase();
+        console.log(this.state);
+    }
+
+    async inputAppleHealthIntoDatabase() {
+        const url = "http://127.0.0.1:5000/scores/add-score";
+        const healthKitOptions = {
+            permissions: {
+                read:  [
+                    PERMS.DateOfBirth,
+                    PERMS.Weight,
+                    PERMS.StepCount
+                ]
+            }
+        };
+
+        AppleHealthKit.initHealthKit(healthKitOptions, (err, results) => {
+            if (err) {
+                console.log("error initializing Healthkit: ", err);
+                return;
+            }
+
+            AppleHealthKit.getStepCount(null, (err, results) => {
+                this.setState({
+                    Steps: results,
+                    refreshing: false,
+                });
+                //api post request here posting it to the database
+                console.log(this.state.Steps);
+                let sleep_temp;
+                if (this.state.Sleep){
+                    sleep_temp = this.state.Sleep
+                }
+                else{
+                    sleep_temp = 0
+                }
+
+                if (this.state.Steps){
+                    axios.post(url, {
+                        username: this.props.username, 
+                        sleep: sleep_temp,
+                        steps: this.state.Steps.value,
+                    }).then((response) => {
+                        console.log(response.data);
+                    }).catch((response) => {
+                        console.log(response);
+                    })
+                }
+            })
+        })
+    }
+
+    async refreshScreen() {
+        await this.inputAppleHealthIntoDatabase();
+        await this.getDataFromDatabase();
+    }
+
+    HomeScreen() {
+    
+        return (
+            <View>
+                <StatusBar barStyle="dark-content" />
+                <SafeAreaView>
+                <ScrollView
+                    contentInsetAdjustmentBehavior="automatic"
+                    style={styles.scrollView}
+                    refreshControl={
+                        <RefreshControl
+                          refreshing={this.state.refreshing}
+                          onRefresh={this.refreshScreen}
+                        />
+                    }>
+                    <View style = {styles.todayHeader}>
+                        <Text style={styles.todayText}>Today</Text>
+                    </View>
+                    <View style = {styles.container}>
+                        
+                        {(this.state.CumulativeScore) !== false ?
+                        <View style = {styles.todayHeader}>
+                            <Text>Current Score: {this.state.CumulativeScore}</Text>
+                        </View> : []
+                        }
+                        <View style={styles.body}>
+                            <View style={styles.sectionContainer}>
+                                {(this.state.Steps !== false) ?
+                                <View style = {{width: "100%"}}>
+                                    <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/this.state.StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                                        <Text style = {styles.progressBarMainText}>Steps</Text>
+                                        <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {this.state.StepGoal}</Text>
+                                    </Progress.Bar>
+                                </View> : []
+                                }
+                                {(!this.state.Steps) &&
+                                <Text style={styles.sectionDescriptionError}>
+                                Add your steps to Health App!
                                 </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity>
-                                <Text>
-                                    Test
-                                </Text>
-                            </TouchableOpacity>
-                            
+                                }
+                            </View>
+                            <View style={styles.sectionContainer}>
+                                {(this.state.Sleep !== false && this.state.SleepGoal !== false) ?
+                                <View style = {{width: "100%"}}>
+                                    <Progress.Bar style = {{width: "100%"}} progress={this.state.Sleep/this.state.SleepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
+                                        <Text style = {styles.progressBarMainText}>Sleep</Text>
+                                        <Text style = {styles.progressBarSubText}>Today: {this.state.Sleep} / {this.state.SleepGoal}</Text>
+                                    </Progress.Bar>
+                                </View> : []
+                                }
+                                {(this.state.Sleep === false || this.state.SleepGoal === false) ? 
+                                <Text style={styles.sectionDescriptionError}>
+                                Add your sleep data to the App!
+                                </Text> : []
+                                }
+                            </View>
                         </View>
-                    </SafeAreaView>
-                </Modal>
+                        <Button onPress={this.modalScoreOpen} title = "ASDF"/>
+                        <Modal
+                            animationType="slide"
+                            visible={this.state.modalScoreVisible}
+                        >
+                            <SafeAreaView>
+                                <View style = {{alignItems: "center", justifyContent: "center"}}>
+
+                                    <TouchableOpacity style = {styles.sleepInputModalButton} onPress = {this.modalScoreClose}>
+                                        <Text style = {{fontSize: 20}}>
+                                            X
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity>
+                                        <Text>
+                                            Test
+                                        </Text>
+                                    </TouchableOpacity>
+                                    
+                                </View>
+                            </SafeAreaView>
+                        </Modal>
+                    </View>
+                </ScrollView>
+                </SafeAreaView>
             </View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
     );
   }
 
@@ -397,7 +483,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         marginTop: 42,
         marginLeft: "3%",
-        color: "white",
+        color: "black",
         fontFamily: "Avenir-Light",
     },
     todayText: {
