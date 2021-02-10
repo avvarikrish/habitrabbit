@@ -53,7 +53,7 @@ def add_score():
 
 @scores_api.route('/get-scores', methods=['GET'])
 def get_scores():
-    response = {}
+    response = []
     try:
         scores_filter = {}
         args = request.args.to_dict()
