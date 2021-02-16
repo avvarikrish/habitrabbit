@@ -12,8 +12,8 @@ def add_location():
         location = request.json
         longitude = location['longitude']
         latitude = location['latitude']
-        index_collection.update_one({'properties.longitude': longitude, 'properties.latitude': latitude},
-                                    {'$setOnInsert': index_bson(longitude, latitude), '$inc': {'frequency': 1}},
+        index_collection.update_one({'longitude': longitude, 'latitude': latitude},
+                                    {'$setOnInsert': index_bson(longitude, latitude), '$inc': {'properties.frequency': 1}},
                                     upsert=True)
 
     except KeyError:
