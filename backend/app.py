@@ -19,6 +19,6 @@ from index_routes import index_api
 app.register_blueprint(user_api, url_prefix='/users')
 app.register_blueprint(scores_api, url_prefix='/scores')
 app.register_blueprint(index_api, url_prefix='/index')
-
+print("App is registered")
 if __name__ == '__main__':
     app.run()
