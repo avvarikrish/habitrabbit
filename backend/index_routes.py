@@ -32,8 +32,6 @@ def get_locations():
         args = request.args.to_dict()
         longitude = float(args['longitude'])
         latitude = float(args['latitude'])
-        print("LONGITUDE", longitude)
-        print("LATITUDE", latitude)
         locations = index_collection.find({'geometry': 
                                 {'$near': 
                                     {'$geometry': 
@@ -43,7 +41,6 @@ def get_locations():
                                     }
                                 }
                             }).limit(MAX_LOCATIONS)
-        print(locations)
         response = make_response(json_util.dumps(locations), 200)
 
     except KeyError:
