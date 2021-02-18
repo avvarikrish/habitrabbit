@@ -62,14 +62,8 @@ export class GoalInput extends React.Component {
                 }
             }
         axios.post(url_goal, {
-            params: {
-                username: this.props.username,
-                goal: goal,
-            },
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-            }
+            username: this.props.username, 
+            goals: goal,
         }).then((response) => {
             console.log(response.data);
         }).catch((response) => {

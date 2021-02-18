@@ -39,7 +39,7 @@ const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
-const dynamicItems = {'2021-01-20': [{name: 'test'}]};
+const dynamicItems = {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]};
 const sleepNumbers = [{ id: "sleep", label: "", min: 0, max: 24 }];
 
 export class Home extends React.Component {
@@ -308,9 +308,50 @@ export class Home extends React.Component {
       <TouchableOpacity
         testID={testIDs.agenda.ITEM}
         style={[styles.item, {height: item.height}]}
-        // onPress={() => Alert.alert(item.name)}
       >
-        <Text>{item.name}</Text>
+        <Text
+          style={{
+            fontSize: 20,
+            fontFamily: 'Avenir-Light',
+            marginBottom: 20,
+          }}
+        >
+          Overview for {item.name}
+        </Text>
+        <Text
+          style = {{
+            fontSize: 15,
+            fontFamily: 'Avenir-Light',
+          }}
+        >
+          Score
+        </Text>
+        <Text
+          style = {{
+            marginBottom: 10, 
+            fontSize: 50, 
+            fontFamily: 'Avenir-Light', 
+            color: "#00adf5",
+          }}
+        >
+          {item.score}
+        </Text>
+        <Text style = {styles.progressBarTitle}>
+          Sleep
+        </Text>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.sleep/8} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Text style = {styles.progressBarTextStyle}>
+            {item.sleep} / 8
+          </Text>
+        </Progress.Bar>
+        <Text style = {styles.progressBarTitle}>
+          Steps
+        </Text>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.steps/1000} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Text style = {styles.progressBarTextStyle}>
+            {item.steps} / 1000
+          </Text>
+        </Progress.Bar>
       </TouchableOpacity>
     );
   }
@@ -372,70 +413,93 @@ export class Home extends React.Component {
     });
   }
 
+  // CalendarScreen() {
+  //   return (
+  //     <View style={{ flex: 1}}>
+          
+  //       <Agenda 
+  //         testID={testIDs.agenda.CONTAINER}
+  //         items={this.state.items}
+  //         renderEmptyData={this.renderEmptyDate.bind(this)}
+  //         renderItem={this.renderItem.bind(this)}
+  //         // loadItemsForMonth={this.loadItems.bind(this)}
+  //         rowHasChanged={this.rowHasChanged.bind(this)}
+  //         renderItem={this.renderItem.bind(this)}
+  //         onDayPress={this.onDayPress.bind(this)}
+                
+  //       />
+  //       <View
+  //         style={{
+  //             alignSelf: 'flex-end',
+  //             paddingBottom: 10,
+  //             paddingRight: 10,
+  //         }}
+  //       >
+  //         <TouchableOpacity
+  //           onPress={this.modalOpen}
+  //           style={{
+  //               borderWidth: 2,
+  //               borderColor: 'rgba(0, 0, 0, 0.2)',
+  //               alignItems: 'center',
+  //               width: 100,
+  //               height: 100,
+  //               backgroundColor: '#024878',
+  //               borderRadius: 50,
+  //           }}
+  //         >
+  //           <Text
+  //             style={{
+  //               textAlign: 'center',
+  //               paddingTop: 15,
+  //               fontSize: 50,
+  //               color: '#FFF'   
+  //             }}
+  //           >
+  //             +
+  //           </Text>   
+  //         </TouchableOpacity>
+  //         <Modal
+  //           animationType="slide"
+  //           visible={this.state.modalVisible}
+  //         >
+  //           <SafeAreaView>
+  //               <TouchableOpacity
+  //               style = {{
+  //                   alignItems: 'center',
+  //               }}
+  //               onPress = {this.modalClose}
+  //               >
+  //                   <Text>Done</Text>
+  //               </TouchableOpacity>
+  //           </SafeAreaView>
+  //         </Modal>
+  //       </View>
+  //     </View>
+  //   );
+  // }
+
   CalendarScreen() {
     return (
       <View style={{ flex: 1}}>
           
         <Agenda 
-          testID={testIDs.agenda.CONTAINER}
+          // testID={testIDs.agenda.CONTAINER}
           items={this.state.items}
           renderEmptyData={this.renderEmptyDate.bind(this)}
-          renderItem={this.renderItem.bind(this)}
+          
           // loadItemsForMonth={this.loadItems.bind(this)}
-          rowHasChanged={this.rowHasChanged.bind(this)}
-          renderItem={this.renderItem.bind(this)}
+          // rowHasChanged={this.rowHasChanged.bind(this)}
           onDayPress={this.onDayPress.bind(this)}
+          renderItem={this.renderItem.bind(this)}
+          theme = {{
+            selectedDayBackgroundColor: '#00adf5',
+          }}
                 
         />
-        <View
-          style={{
-              alignSelf: 'flex-end',
-              paddingBottom: 10,
-              paddingRight: 10,
-          }}
-        >
-          <TouchableOpacity
-            onPress={this.modalOpen}
-            style={{
-                borderWidth: 2,
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                alignItems: 'center',
-                width: 100,
-                height: 100,
-                backgroundColor: '#024878',
-                borderRadius: 50,
-            }}
-          >
-            <Text
-              style={{
-                textAlign: 'center',
-                paddingTop: 15,
-                fontSize: 50,
-                color: '#FFF'   
-              }}
-            >
-              +
-            </Text>   
-          </TouchableOpacity>
-          <Modal
-            animationType="slide"
-            visible={this.state.modalVisible}
-          >
-            <SafeAreaView>
-                <TouchableOpacity
-                style = {{
-                    alignItems: 'center',
-                }}
-                onPress = {this.modalClose}
-                >
-                    <Text>Done</Text>
-                </TouchableOpacity>
-            </SafeAreaView>
-          </Modal>
-        </View>
       </View>
     );
   }
+
 
   render() {
     return (
@@ -579,6 +643,15 @@ const styles = StyleSheet.create({
       borderBottomColor: "#024878",
       borderBottomWidth: 2,
       marginBottom: "10%",
+    },
+    progressBarTextStyle: {
+      position: 'absolute',
+      marginTop: 2, 
+      marginLeft: 10,
+    }, 
+    progressBarTitle: {
+      fontSize: 15, 
+      fontFamily: 'Avenir-Light', 
     },
     });
 
