@@ -26,12 +26,12 @@ import {
 
 import { Login } from './Login.js';
 import * as Progress from 'react-native-progress';
-// import {Picker} from '@react-native-picker/picker';
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
+import GoalInput from './GoalInput.js';
 
 const axios = require('axios');
 const Stack = createStackNavigator();
@@ -39,7 +39,7 @@ const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
-const dynamicItems = {'2021-01-20': [{name: 'test'}]};
+const dynamicItems = {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]};
 const sleepNumbers = [{ id: "sleep", label: "", min: 0, max: 24 }];
 
 export class Home extends React.Component {
@@ -57,6 +57,7 @@ export class Home extends React.Component {
       SleepWeight: false,
       SleepGoal: false,
       SleepInput: "0",
+      SleepGoalInput: "",
       modalScoreVisible: false,
       CumulativeScore: false,
       refreshing: false,
@@ -168,21 +169,25 @@ export class Home extends React.Component {
                 });
                 //api post request here posting it to the database
                 console.log(this.state.Steps);
-                let sleep_temp;
-                if (this.state.Sleep){
-                    sleep_temp = this.state.Sleep
-                }
-                else{
-                    sleep_temp = 0
-                }
+                // let sleep_temp;
+                // if (this.state.Sleep){
+                //     sleep_temp = this.state.Sleep
+                // }
+                // else{
+                //     sleep_temp = 0
+                // }
 
                 if (this.state.Steps){
                     axios.post(url, {
-                        username: this.props.username, 
-                        sleep: sleep_temp,
+                        username: this.props.username,
                         steps: this.state.Steps.value,
                     }).then((response) => {
+                        // this.setState({ CumulativeScore: response.data.cumulative_score })
                         console.log(response.data);
+                        this.setState({Sleep: response.data.subscores.sleep.value, SleepWeight: response.data.subscores.sleep.weight, 
+                            SleepGoal: response.data.subscores.sleep.goal, StepGoal: response.data.subscores.steps.goal, StepWeight: response.data.subscores.steps.weight,
+                            CumulativeScore: response.data.cumulative_score,
+                        })
                     }).catch((response) => {
                         console.log(response);
                     })
@@ -193,13 +198,12 @@ export class Home extends React.Component {
 
     async refreshScreen() {
         await this.inputAppleHealthIntoDatabase();
-        await this.getDataFromDatabase();
     }
 
     HomeScreen() {
     
         return (
-            <View>
+            <View style = {{height: '100%'}}>
                 <StatusBar barStyle="dark-content" />
                 <SafeAreaView>
                 <ScrollView
@@ -223,7 +227,7 @@ export class Home extends React.Component {
                         }
                         <View style={styles.body}>
                             <View style={styles.sectionContainer}>
-                                {(this.state.Steps !== false) ?
+                                {(this.state.Steps === 0 || this.state.Steps) ?
                                 <View style = {{width: "100%"}}>
                                     <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/this.state.StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
                                         <Text style = {styles.progressBarMainText}>Steps</Text>
@@ -233,7 +237,7 @@ export class Home extends React.Component {
                                 }
                                 {(!this.state.Steps) &&
                                 <Text style={styles.sectionDescriptionError}>
-                                Add your steps to Health App!
+                                    Add your steps to Health App!
                                 </Text>
                                 }
                             </View>
@@ -248,38 +252,29 @@ export class Home extends React.Component {
                                 }
                                 {(this.state.Sleep === false || this.state.SleepGoal === false) ? 
                                 <Text style={styles.sectionDescriptionError}>
-                                Add your sleep data to the App!
+                                    Add your sleep data to the App!
                                 </Text> : []
                                 }
                             </View>
                         </View>
-                        <Button onPress={this.modalScoreOpen} title = "ASDF"/>
-                        <Modal
-                            animationType="slide"
-                            visible={this.state.modalScoreVisible}
-                        >
-                            <SafeAreaView>
-                                <View style = {{alignItems: "center", justifyContent: "center"}}>
-
-                                    <TouchableOpacity style = {styles.sleepInputModalButton} onPress = {this.modalScoreClose}>
-                                        <Text style = {{fontSize: 20}}>
-                                            X
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Text>
-                                            Test
-                                        </Text>
-                                    </TouchableOpacity>
-                                    
-                                </View>
-                            </SafeAreaView>
-                        </Modal>
+                        {/* <View style={styles.sleepInputModalButtonView}>
+                            <TouchableOpacity onPress={this.modalScoreOpen} style={styles.sleepInputModalButton}>
+                                <Text style={styles.sleepInputModalPlus}>
+                                    +
+                                </Text>   
+                            </TouchableOpacity>
+                        </View> */}
                     </View>
                 </ScrollView>
                 </SafeAreaView>
             </View>
     );
+  }
+
+  InputScreen() {
+      return (
+        <GoalInput username = {this.props.username}/>
+      );
   }
 
   // loadItems = (day) => {
@@ -313,9 +308,50 @@ export class Home extends React.Component {
       <TouchableOpacity
         testID={testIDs.agenda.ITEM}
         style={[styles.item, {height: item.height}]}
-        // onPress={() => Alert.alert(item.name)}
       >
-        <Text>{item.name}</Text>
+        <Text
+          style={{
+            fontSize: 20,
+            fontFamily: 'Avenir-Light',
+            marginBottom: 20,
+          }}
+        >
+          Overview for {item.name}
+        </Text>
+        <Text
+          style = {{
+            fontSize: 15,
+            fontFamily: 'Avenir-Light',
+          }}
+        >
+          Score
+        </Text>
+        <Text
+          style = {{
+            marginBottom: 10, 
+            fontSize: 50, 
+            fontFamily: 'Avenir-Light', 
+            color: "#00adf5",
+          }}
+        >
+          {item.score}
+        </Text>
+        <Text style = {styles.progressBarTitle}>
+          Sleep
+        </Text>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.sleep/8} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Text style = {styles.progressBarTextStyle}>
+            {item.sleep} / 8
+          </Text>
+        </Progress.Bar>
+        <Text style = {styles.progressBarTitle}>
+          Steps
+        </Text>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.steps/1000} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Text style = {styles.progressBarTextStyle}>
+            {item.steps} / 1000
+          </Text>
+        </Progress.Bar>
       </TouchableOpacity>
     );
   }
@@ -377,89 +413,99 @@ export class Home extends React.Component {
     });
   }
 
+  // CalendarScreen() {
+  //   return (
+  //     <View style={{ flex: 1}}>
+          
+  //       <Agenda 
+  //         testID={testIDs.agenda.CONTAINER}
+  //         items={this.state.items}
+  //         renderEmptyData={this.renderEmptyDate.bind(this)}
+  //         renderItem={this.renderItem.bind(this)}
+  //         // loadItemsForMonth={this.loadItems.bind(this)}
+  //         rowHasChanged={this.rowHasChanged.bind(this)}
+  //         renderItem={this.renderItem.bind(this)}
+  //         onDayPress={this.onDayPress.bind(this)}
+                
+  //       />
+  //       <View
+  //         style={{
+  //             alignSelf: 'flex-end',
+  //             paddingBottom: 10,
+  //             paddingRight: 10,
+  //         }}
+  //       >
+  //         <TouchableOpacity
+  //           onPress={this.modalOpen}
+  //           style={{
+  //               borderWidth: 2,
+  //               borderColor: 'rgba(0, 0, 0, 0.2)',
+  //               alignItems: 'center',
+  //               width: 100,
+  //               height: 100,
+  //               backgroundColor: '#024878',
+  //               borderRadius: 50,
+  //           }}
+  //         >
+  //           <Text
+  //             style={{
+  //               textAlign: 'center',
+  //               paddingTop: 15,
+  //               fontSize: 50,
+  //               color: '#FFF'   
+  //             }}
+  //           >
+  //             +
+  //           </Text>   
+  //         </TouchableOpacity>
+  //         <Modal
+  //           animationType="slide"
+  //           visible={this.state.modalVisible}
+  //         >
+  //           <SafeAreaView>
+  //               <TouchableOpacity
+  //               style = {{
+  //                   alignItems: 'center',
+  //               }}
+  //               onPress = {this.modalClose}
+  //               >
+  //                   <Text>Done</Text>
+  //               </TouchableOpacity>
+  //           </SafeAreaView>
+  //         </Modal>
+  //       </View>
+  //     </View>
+  //   );
+  // }
+
   CalendarScreen() {
     return (
       <View style={{ flex: 1}}>
           
         <Agenda 
-          testID={testIDs.agenda.CONTAINER}
+          // testID={testIDs.agenda.CONTAINER}
           items={this.state.items}
           renderEmptyData={this.renderEmptyDate.bind(this)}
-          renderItem={this.renderItem.bind(this)}
+          
           // loadItemsForMonth={this.loadItems.bind(this)}
-          rowHasChanged={this.rowHasChanged.bind(this)}
-          renderItem={this.renderItem.bind(this)}
+          // rowHasChanged={this.rowHasChanged.bind(this)}
           onDayPress={this.onDayPress.bind(this)}
+          renderItem={this.renderItem.bind(this)}
+          theme = {{
+            selectedDayBackgroundColor: '#00adf5',
+          }}
                 
         />
-        <View
-          style={{
-              alignSelf: 'flex-end',
-              paddingBottom: 10,
-              paddingRight: 10,
-          }}
-        >
-          <TouchableOpacity
-            onPress={this.modalOpen}
-            style={{
-                borderWidth: 2,
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                alignItems: 'center',
-                width: 100,
-                height: 100,
-                backgroundColor: '#024878',
-                borderRadius: 50,
-            }}
-          >
-            <Text
-              style={{
-                textAlign: 'center',
-                paddingTop: 15,
-                fontSize: 50,
-                color: '#FFF'   
-              }}
-            >
-              +
-            </Text>   
-          </TouchableOpacity>
-          <Modal
-            animationType="slide"
-            visible={this.state.modalVisible}
-          >
-            <SafeAreaView>
-                <TouchableOpacity
-                style = {{
-                    alignItems: 'center',
-                }}
-                onPress = {this.modalClose}
-                >
-                    <Text>Done</Text>
-                </TouchableOpacity>
-            </SafeAreaView>
-          </Modal>
-        </View>
       </View>
     );
   }
-
-//   MainPage() {
-//     return (
-//       // <NavigationContainer>
-//       <Tab.Navigator>
-//         <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} />
-//         <Tab.Screen name="Settings" component={this.CalendarScreen.bind(this)} />
-//       </Tab.Navigator>
-//       // </NavigationContainer>
-
-//     );
-//   }
-
 
 
   render() {
     return (
         <Tab.Navigator>
-          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} />
+          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options={{ tabBarBadge: 3 }}/>
+          <Tab.Screen name="Input" component={this.InputScreen.bind(this)} />
           <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
@@ -467,9 +513,37 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    goalInput: {
+        height: "30%",
+        width: "75%",
+        borderBottomColor: "#024878",
+        borderBottomWidth: 2,
+        // marginBottom: "10%",
+    },
+    sleepInputModalClose: {
+        alignSelf: 'flex-end',
+        marginRight: '3%',
+    },
+    sleepInputModalPlus: {
+        textAlign: 'center',
+        paddingTop: 15,
+        fontSize: 50,
+        color: '#FFF'
+    },
+    sleepInputModalButtonView: {
+        alignSelf: 'flex-end',
+        justifyContent: 'flex-end',
+        marginTop: "10%",
+        marginRight: "3%",
+    },
     sleepInputModalButton: {
-        alignSelf: "flex-end",
-        marginRight: "5%",
+        borderWidth: 2,
+        borderColor: 'rgba(0, 0, 0, 0.2)',
+        alignItems: 'center',
+        width: 100,
+        height: 100,
+        backgroundColor: '#024878',
+        borderRadius: 50,
     },
     progressBarMainText: {
         position: "absolute",
@@ -569,6 +643,15 @@ const styles = StyleSheet.create({
       borderBottomColor: "#024878",
       borderBottomWidth: 2,
       marginBottom: "10%",
+    },
+    progressBarTextStyle: {
+      position: 'absolute',
+      marginTop: 2, 
+      marginLeft: 10,
+    }, 
+    progressBarTitle: {
+      fontSize: 15, 
+      fontFamily: 'Avenir-Light', 
     },
     });
 
