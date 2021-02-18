@@ -10,12 +10,13 @@ def create_user():
     response = Response('success', 200)
     try:
         user_info = request.json
+        print(user_info)
         result = users_collection.update_one(
             {'username': user_info['username']},
             {'$setOnInsert': user_bson(user_info, 'create')},
             upsert=True
         )
-        
+        print(result)
         # username already exists
         if result.matched_count > 0:
             response = Response('user already exists: ' + user_info['username'], 409)
