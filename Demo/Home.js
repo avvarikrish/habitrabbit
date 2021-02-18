@@ -26,12 +26,12 @@ import {
 
 import { Login } from './Login.js';
 import * as Progress from 'react-native-progress';
-// import {Picker} from '@react-native-picker/picker';
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
+import GoalInput from './GoalInput.js';
 
 const axios = require('axios');
 const Stack = createStackNavigator();
@@ -57,6 +57,7 @@ export class Home extends React.Component {
       SleepWeight: false,
       SleepGoal: false,
       SleepInput: "0",
+      SleepGoalInput: "",
       modalScoreVisible: false,
       CumulativeScore: false,
       refreshing: false,
@@ -168,21 +169,25 @@ export class Home extends React.Component {
                 });
                 //api post request here posting it to the database
                 console.log(this.state.Steps);
-                let sleep_temp;
-                if (this.state.Sleep){
-                    sleep_temp = this.state.Sleep
-                }
-                else{
-                    sleep_temp = 0
-                }
+                // let sleep_temp;
+                // if (this.state.Sleep){
+                //     sleep_temp = this.state.Sleep
+                // }
+                // else{
+                //     sleep_temp = 0
+                // }
 
                 if (this.state.Steps){
                     axios.post(url, {
-                        username: this.props.username, 
-                        sleep: sleep_temp,
+                        username: this.props.username,
                         steps: this.state.Steps.value,
                     }).then((response) => {
+                        // this.setState({ CumulativeScore: response.data.cumulative_score })
                         console.log(response.data);
+                        this.setState({Sleep: response.data.subscores.sleep.value, SleepWeight: response.data.subscores.sleep.weight, 
+                            SleepGoal: response.data.subscores.sleep.goal, StepGoal: response.data.subscores.steps.goal, StepWeight: response.data.subscores.steps.weight,
+                            CumulativeScore: response.data.cumulative_score,
+                        })
                     }).catch((response) => {
                         console.log(response);
                     })
@@ -193,13 +198,12 @@ export class Home extends React.Component {
 
     async refreshScreen() {
         await this.inputAppleHealthIntoDatabase();
-        await this.getDataFromDatabase();
     }
 
     HomeScreen() {
     
         return (
-            <View>
+            <View style = {{height: '100%'}}>
                 <StatusBar barStyle="dark-content" />
                 <SafeAreaView>
                 <ScrollView
@@ -223,7 +227,7 @@ export class Home extends React.Component {
                         }
                         <View style={styles.body}>
                             <View style={styles.sectionContainer}>
-                                {(this.state.Steps !== false) ?
+                                {(this.state.Steps === 0 || this.state.Steps) ?
                                 <View style = {{width: "100%"}}>
                                     <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/this.state.StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
                                         <Text style = {styles.progressBarMainText}>Steps</Text>
@@ -233,7 +237,7 @@ export class Home extends React.Component {
                                 }
                                 {(!this.state.Steps) &&
                                 <Text style={styles.sectionDescriptionError}>
-                                Add your steps to Health App!
+                                    Add your steps to Health App!
                                 </Text>
                                 }
                             </View>
@@ -248,38 +252,29 @@ export class Home extends React.Component {
                                 }
                                 {(this.state.Sleep === false || this.state.SleepGoal === false) ? 
                                 <Text style={styles.sectionDescriptionError}>
-                                Add your sleep data to the App!
+                                    Add your sleep data to the App!
                                 </Text> : []
                                 }
                             </View>
                         </View>
-                        <Button onPress={this.modalScoreOpen} title = "ASDF"/>
-                        <Modal
-                            animationType="slide"
-                            visible={this.state.modalScoreVisible}
-                        >
-                            <SafeAreaView>
-                                <View style = {{alignItems: "center", justifyContent: "center"}}>
-
-                                    <TouchableOpacity style = {styles.sleepInputModalButton} onPress = {this.modalScoreClose}>
-                                        <Text style = {{fontSize: 20}}>
-                                            X
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Text>
-                                            Test
-                                        </Text>
-                                    </TouchableOpacity>
-                                    
-                                </View>
-                            </SafeAreaView>
-                        </Modal>
+                        {/* <View style={styles.sleepInputModalButtonView}>
+                            <TouchableOpacity onPress={this.modalScoreOpen} style={styles.sleepInputModalButton}>
+                                <Text style={styles.sleepInputModalPlus}>
+                                    +
+                                </Text>   
+                            </TouchableOpacity>
+                        </View> */}
                     </View>
                 </ScrollView>
                 </SafeAreaView>
             </View>
     );
+  }
+
+  InputScreen() {
+      return (
+        <GoalInput username = {this.props.username}/>
+      );
   }
 
   // loadItems = (day) => {
@@ -442,24 +437,11 @@ export class Home extends React.Component {
     );
   }
 
-//   MainPage() {
-//     return (
-//       // <NavigationContainer>
-//       <Tab.Navigator>
-//         <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} />
-//         <Tab.Screen name="Settings" component={this.CalendarScreen.bind(this)} />
-//       </Tab.Navigator>
-//       // </NavigationContainer>
-
-//     );
-//   }
-
-
-
   render() {
     return (
         <Tab.Navigator>
-          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} />
+          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options={{ tabBarBadge: 3 }}/>
+          <Tab.Screen name="Input" component={this.InputScreen.bind(this)} />
           <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
@@ -467,9 +449,37 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    goalInput: {
+        height: "30%",
+        width: "75%",
+        borderBottomColor: "#024878",
+        borderBottomWidth: 2,
+        // marginBottom: "10%",
+    },
+    sleepInputModalClose: {
+        alignSelf: 'flex-end',
+        marginRight: '3%',
+    },
+    sleepInputModalPlus: {
+        textAlign: 'center',
+        paddingTop: 15,
+        fontSize: 50,
+        color: '#FFF'
+    },
+    sleepInputModalButtonView: {
+        alignSelf: 'flex-end',
+        justifyContent: 'flex-end',
+        marginTop: "10%",
+        marginRight: "3%",
+    },
     sleepInputModalButton: {
-        alignSelf: "flex-end",
-        marginRight: "5%",
+        borderWidth: 2,
+        borderColor: 'rgba(0, 0, 0, 0.2)',
+        alignItems: 'center',
+        width: 100,
+        height: 100,
+        backgroundColor: '#024878',
+        borderRadius: 50,
     },
     progressBarMainText: {
         position: "absolute",
