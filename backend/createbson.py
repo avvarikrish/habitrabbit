@@ -44,8 +44,6 @@ def index_bson(longitude, latitude):
             'type': 'Point',
             'coordinates' : [longitude, latitude],
         },
-        'properties': {
-            'longitude': longitude,
-            'latitude': latitude
-        }
+        'longitude': longitude,
+        'latitude': latitude,
     }
