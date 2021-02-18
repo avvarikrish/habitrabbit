@@ -1,3 +1,5 @@
+from gevent import monkey
+monkey.patch_all()
 from app import app
 print("app is registered 2")
 @app.route('/')
