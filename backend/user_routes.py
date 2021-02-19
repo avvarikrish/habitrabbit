@@ -23,7 +23,8 @@ def create_user():
 
     except KeyError:
         response = Response('invalid client request', 400)
-
+    except Exception as e:
+        print(e)
     finally:
         return response
 
