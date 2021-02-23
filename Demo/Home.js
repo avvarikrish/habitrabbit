@@ -175,12 +175,10 @@ export class Home extends React.Component {
                   month = response.data[i].month.toString();
                 }
                 var date = response.data[i].year.toString() + '-' + month + '-' + day;
-                dict[date] = [{name: 'test', score: response.data[i].cumulative_score, sleep: response.data[i].subscores.sleep.value, steps: 100}];
+                dict[date] = [{score: response.data[i].cumulative_score, sleep: response.data[i].subscores.sleep.value, sleep_goal: response.data[i].subscores.sleep.goal, steps: response.data[i].subscores.steps.value, steps_goal: response.data[i].subscores.steps.goal}];
               }
               this.setState({items: dict});
               // this.setState({items: {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]}});
-              console.log("YOO YO");
-              console.log(this.state.items);
               
           }
       }).catch((response) => {
@@ -370,7 +368,7 @@ export class Home extends React.Component {
             marginBottom: 20,
           }}
         >
-          Overview for {item.name}
+          Overview
         </Text>
         <Text
           style = {{
@@ -393,17 +391,17 @@ export class Home extends React.Component {
         <Text style = {styles.progressBarTitle}>
           Sleep
         </Text>
-        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.sleep/8} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.sleep/item.sleep_goal} width={null} height={20} borderRadius={10} color={"#00adf5"}>
         <Text style = {styles.progressBarTextStyle}>
-            {item.sleep} / 8
+            {item.sleep} / {item.sleep_goal}
           </Text>
         </Progress.Bar>
         <Text style = {styles.progressBarTitle}>
           Steps
         </Text>
-        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.steps/1000} width={null} height={20} borderRadius={10} color={"#00adf5"}>
+        <Progress.Bar style = {{width: "100%", marginBottom: 20}} progress={item.steps/item.steps_goal} width={null} height={20} borderRadius={10} color={"#00adf5"}>
         <Text style = {styles.progressBarTextStyle}>
-            {item.steps} / 1000
+            {item.steps} / {item.steps_goal}
           </Text>
         </Progress.Bar>
       </TouchableOpacity>
