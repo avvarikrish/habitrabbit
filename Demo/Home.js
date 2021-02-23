@@ -69,6 +69,7 @@ export class Home extends React.Component {
     this.modalScoreClose = this.modalScoreClose.bind(this);
     this.getAppleHealthData = this.getAppleHealthData.bind(this);
     this.getDataFromDatabase = this.getDataFromDatabase.bind(this);
+    this.getAllScores = this.getAllScores.bind(this);
     this.refreshScreen = this.refreshScreen.bind(this);
     this.inputAppleHealthIntoDatabase = this.inputAppleHealthIntoDatabase.bind(this);
   }
@@ -131,16 +132,46 @@ export class Home extends React.Component {
                     CumulativeScore: response.data[0].cumulative_score,
                 
                 })
+                console.log(response.data);
             }
         }).catch((response) => {
             console.log(response);
         })
     }
 
+    async getAllScores() {
+      const url = "http://127.0.0.1:5000/scores/get-scores";
+      await axios.get(url, {
+          params: {
+              username: this.props.username, 
+              year: '2021'
+          },
+          headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+          }
+      }).then((response) => {
+          if (response.data != []){
+              // this.setState({Sleep: response.data[0].subscores.sleep.value, SleepWeight: response.data[0].subscores.sleep.weight, 
+              //     SleepGoal: response.data[0].subscores.sleep.goal, StepGoal: response.data[0].subscores.steps.goal, StepWeight: response.data[0].subscores.steps.weight,
+              //     CumulativeScore: response.data[0].cumulative_score,
+              
+              // })
+              console.log("SUP");
+              console.log(response.data);
+              
+          }
+      }).catch((response) => {
+          console.log(response);
+      })
+  }
+
     async componentDidMount() {
         //API calls to data base getting sleep and weights etc.
         await this.getAppleHealthData();
         await this.getDataFromDatabase();
+        await this.getAllScores();
+
         console.log(this.state);
     }
 
