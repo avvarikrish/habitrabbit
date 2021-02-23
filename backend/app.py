@@ -2,15 +2,18 @@ from flask import Flask
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
+import googlemaps
 
 app = Flask(__name__)
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/habitrabbit'
+app.config['MONGO_URI'] = os.environ.get('MONGO_URL')
 load_dotenv()
 
 hr_db = PyMongo(app)
 users_collection = hr_db.db['users']
 scores_collection = hr_db.db['scores']
 index_collection = hr_db.db['index']
+
+gmaps = googlemaps.Client(key=os.environ.get('GMAPS_KEY'))
 
 from user_routes import user_api
 from score_routes import scores_api

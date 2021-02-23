@@ -1,7 +1,8 @@
-from flask import Blueprint, request, Response, jsonify, make_response
-from datetime import datetime, timedelta
-from createbson import score_bson, goals_bson
+from flask import Blueprint, request, Response, make_response
+from datetime import datetime
 from bson import json_util
+
+from createbson import score_bson, goals_bson
 from subscore import Subscore
 
 scores_api = Blueprint('scores_api', __name__)
@@ -21,13 +22,13 @@ def add_score():
         if user is None:
             response = make_response(Response('user not found: ' + username), 401)
         else:
-            user_score = scores_collection.find_one({'username': username, 'month': month, 'day': day, 'year': year})
             sleep_value, steps_value = 0, 0
             if 'sleep' in score_info:
                 sleep_value = score_info['sleep']
             if 'steps' in score_info:
                 steps_value = score_info['steps']
 
+            user_score = scores_collection.find_one({'username': username, 'month': month, 'day': day, 'year': year})
             if user_score is not None:
                 if 'sleep' not in score_info:
                     sleep_value = user_score['subscores']['sleep']['value']
@@ -48,12 +49,15 @@ def add_score():
     except KeyError:
         response = make_response(Response('invalid client request'), 400)
 
+    except Exception as e:
+        response = make_response(Response(e), 500)
+
     finally:
         return response
 
 @scores_api.route('/get-scores', methods=['GET'])
 def get_scores():
-    response = {}
+    response = []
     try:
         scores_filter = {}
         args = request.args.to_dict()
@@ -78,6 +82,9 @@ def get_scores():
     except KeyError:
         response = make_response(Response('invalid client request'), 400)
 
+    except Exception as e:
+        response = make_response(Response(e), 500)
+
     finally:
         return response
 
@@ -100,9 +107,11 @@ def update_goals():
                                             }
                                     })
                                     
-    
     except KeyError:
         response = make_response(Response('invalid client request'), 400)
+
+    except Exception as e:
+        response = make_response(Response(e), 500)
 
     finally:
         return response

@@ -1,6 +1,8 @@
-import math
 import json
+import os
 from urllib import request, parse
+
+from pkg import truncate
 
 PRECISION = 4
 LAT_LONG_FILE = 'us-zip-code-latitude-and-longitude.json'
@@ -10,8 +12,8 @@ with open(LAT_LONG_FILE, 'r') as data_file:
     data = json.load(data_file)
     precision_value = 10 ** PRECISION
     for location in data:
-        trunc_longitude = math.floor(location['fields']['longitude'] * precision_value) / precision_value
-        trunc_latitude = math.floor(location['fields']['latitude'] * precision_value) / precision_value
+        trunc_longitude = truncate(location['fields']['longitude'], PRECISION)
+        trunc_latitude = truncate(location['fields']['latitude'], PRECISION)
         post_data = {'longitude': trunc_longitude, 'latitude': trunc_latitude}
         jsondata = json.dumps(post_data).encode('utf-8')
         req = request.Request(URL)

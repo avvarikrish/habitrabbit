@@ -7,3 +7,6 @@ __pycache__/
 
 # geojson
 us-zip-code-latitude-and-longitude.json
+
+# startup
+startup.sh
