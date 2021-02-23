@@ -14,7 +14,7 @@ import {
   } from 'react-native';
 
 // import Geolocation from 'react-native-geolocation-service';
-
+const axios = require('axios');
 navigator.geolocation = require('@react-native-community/geolocation');
 
 export class Recommendation extends React.Component {
@@ -36,6 +36,16 @@ export class Recommendation extends React.Component {
           
               this.setState({ location });
               console.log(this.state.location);
+              var coords = JSON.parse(this.state.location).coords;
+              axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
+              {
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+            }).then((response) => {
+                console.log(response);
+            }).catch((response) => {
+                console.log(response);
+            })
             },
             error => Alert.alert(error.message),
             { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
