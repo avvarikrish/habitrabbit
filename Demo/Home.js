@@ -39,7 +39,7 @@ const testIDs = require('./testIDs');
 const PERMS = AppleHealthKit.Constants.Permissions;
 const Tab = createBottomTabNavigator();
 const StepGoal = 10000;
-const dynamicItems = {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]};
+const dynamicItems = {'2021-02-17': [{name: 'February 17, 2021', score: 84.25, sleep: 7, steps: 700}]};
 const sleepNumbers = [{ id: "sleep", label: "", min: 0, max: 24 }];
 
 export class Home extends React.Component {
@@ -115,7 +115,8 @@ export class Home extends React.Component {
     }
 
     async getDataFromDatabase() {
-        const url = "http://127.0.0.1:5000/scores/get-scores";
+        const url = "https://botsecure.mangocircle.com:8000/scores/get-scores";
+        // const url = "http://127.0.0.1:5000/scores/get-scores";
         await axios.get(url, {
             params: {
                 username: this.props.username, 
@@ -145,7 +146,8 @@ export class Home extends React.Component {
     }
 
     async inputAppleHealthIntoDatabase() {
-        const url = "http://127.0.0.1:5000/scores/add-score";
+        // const url = "http://127.0.0.1:5000/scores/add-score";
+        const url = "https://botsecure.mangocircle.com:8000/scores/add-score";
         const healthKitOptions = {
             permissions: {
                 read:  [

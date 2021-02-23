@@ -54,7 +54,8 @@ export class App extends React.Component {
   }
 
   loginHandler(username, password) {
-    fetch("http://127.0.0.1:5000/users/login-user", 
+    // fetch("http://127.0.0.1:5000/users/login-user", 
+    fetch("https://botsecure.mangocircle.com:8000/users/login-user",
     {
       method: "POST",
       headers: {
@@ -81,7 +82,8 @@ export class App extends React.Component {
   }
 
   signupHandler(username, first_name, last_name, password){
-    fetch("http://127.0.0.1:5000/users/create-user", 
+    // fetch("http://127.0.0.1:5000/users/create-user", 
+    fetch("https://botsecure.mangocircle.com:8000/users/create-user",
     {
       method: "POST",
       headers: {
