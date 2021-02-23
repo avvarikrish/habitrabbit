@@ -38,7 +38,8 @@ export class GoalInput extends React.Component {
     }
 
     scoreAndGoalInput() {
-        const url_add = "http://127.0.0.1:5000/scores/add-score";
+        // const url_add = "http://127.0.0.1:5000/scores/add-score";
+        const url_add = "https://botsecure.mangocircle.com:8000/scores/add-score";
         axios.post(url_add, {
             username: this.props.username,
             sleep: parseInt(this.state.SleepInput, 10),
@@ -49,7 +50,8 @@ export class GoalInput extends React.Component {
             console.log(response);
         })
 
-        const url_goal = "http://127.0.0.1:5000/scores/update-goals";
+        // const url_goal = "http://127.0.0.1:5000/scores/update-goals";
+        const url_goal = "https://botsecure.mangocircle.com:8000/scores/update-goals";
         const goal = 
             {
                 "sleep": {
