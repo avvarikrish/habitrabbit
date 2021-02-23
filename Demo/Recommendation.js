@@ -15,6 +15,8 @@ import {
 
 // import Geolocation from 'react-native-geolocation-service';
 
+navigator.geolocation = require('@react-native-community/geolocation');
+
 export class Recommendation extends React.Component {
 
     constructor(props) {
@@ -22,6 +24,22 @@ export class Recommendation extends React.Component {
       this.state = {
           location: null
         }
+
+        this.getLocation = this.getLocation.bind(this);
+    }
+
+    getLocation() {
+        navigator.geolocation.requestAuthorization();
+        navigator.geolocation.getCurrentPosition(
+            position => {
+              const location = JSON.stringify(position);
+          
+              this.setState({ location });
+              console.log(this.state.location);
+            },
+            error => Alert.alert(error.message),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+          );
     }
 
     render() {
@@ -33,9 +51,13 @@ export class Recommendation extends React.Component {
                     contentInsetAdjustmentBehavior="automatic"
                 >
                     <View>
-                        <Text>
-                            Hello
-                        </Text>
+                        <TouchableOpacity
+                            onPress = {this.getLocation}
+                        >
+                            <Text>
+                                Hello
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
                 </SafeAreaView>
