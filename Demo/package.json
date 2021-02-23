@@ -24,6 +24,7 @@
     "react-native-calendars": "^1.1129.0",
     "react-native-date-picker": "^3.2.9",
     "react-native-datepicker": "^1.7.2",
+    "react-native-geolocation-service": "^5.2.0",
     "react-native-gesture-handler": "^1.9.0",
     "react-native-material-dropdown": "^0.11.1",
     "react-native-modal-datetime-picker": "^9.1.0",

@@ -32,6 +32,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
 import GoalInput from './GoalInput.js';
+import Recommendation from './Recommendation.js';
+
 
 const axios = require('axios');
 const Stack = createStackNavigator();
@@ -221,13 +223,6 @@ export class Home extends React.Component {
                 });
                 //api post request here posting it to the database
                 console.log(this.state.Steps);
-                // let sleep_temp;
-                // if (this.state.Sleep){
-                //     sleep_temp = this.state.Sleep
-                // }
-                // else{
-                //     sleep_temp = 0
-                // }
 
                 if (this.state.Steps){
                     axios.post(url, {
@@ -309,13 +304,6 @@ export class Home extends React.Component {
                                 }
                             </View>
                         </View>
-                        {/* <View style={styles.sleepInputModalButtonView}>
-                            <TouchableOpacity onPress={this.modalScoreOpen} style={styles.sleepInputModalButton}>
-                                <Text style={styles.sleepInputModalPlus}>
-                                    +
-                                </Text>   
-                            </TouchableOpacity>
-                        </View> */}
                     </View>
                 </ScrollView>
                 </SafeAreaView>
@@ -329,31 +317,13 @@ export class Home extends React.Component {
       );
   }
 
-  // loadItems = (day) => {
-  //   setTimeout(() => {
-  //     for (let i = -15; i < 85; i++) {
-  //       const time = day.timestamp + i * 24 * 60 * 60 * 1000;
-  //       const strTime = this.timeToString(time);
-  //       if (!this.state.items[strTime]) {
-  //         this.state.items[strTime] = [];
-  //         const numItems = Math.floor(Math.random() * 3 + 1);
-  //         for (let j = 0; j < numItems; j++) {
-  //           this.state.items[strTime].push({
-  //             name: 'Item for ' + strTime + ' #' + j,
-  //             height: Math.max(50, Math.floor(Math.random() * 150))
-  //           });
-  //         }
-  //       }
-  //     }
-  //     const newItems = {};
-  //     Object.keys(this.state.items).forEach(key => {
-  //       newItems[key] = this.state.items[key];
-  //     });
-  //     this.setState({
-  //       items: newItems
-  //     });
-  //   }, 1000);
-  // }
+  RecommendationScreen() {
+    return (
+      <Recommendation/>
+    );
+}
+
+
 
   renderItem(item) {
     return (
@@ -428,18 +398,6 @@ export class Home extends React.Component {
   }
 
 
-  // loadItems = (day) => {
-  //   // setTimeout(() => {
-  //     const newItems = {'2021-01-20': [{name: 'test'}], '2021-01-21': [{name: 'test2'}]};
-  //     // Object.keys(this.state.items).forEach(key => {
-  //     //   newItems[key] = this.state.items[key];
-  //     // });
-  //     this.setState({
-  //       items: newItems
-  //     });
-  //   // }, 10);
-  // }
-
   onDayPress(day) {
     console.log(day);
     axios.get('http://127.0.0.1:5000/scores/get-scores', {
@@ -465,70 +423,6 @@ export class Home extends React.Component {
     });
   }
 
-  // CalendarScreen() {
-  //   return (
-  //     <View style={{ flex: 1}}>
-          
-  //       <Agenda 
-  //         testID={testIDs.agenda.CONTAINER}
-  //         items={this.state.items}
-  //         renderEmptyData={this.renderEmptyDate.bind(this)}
-  //         renderItem={this.renderItem.bind(this)}
-  //         // loadItemsForMonth={this.loadItems.bind(this)}
-  //         rowHasChanged={this.rowHasChanged.bind(this)}
-  //         renderItem={this.renderItem.bind(this)}
-  //         onDayPress={this.onDayPress.bind(this)}
-                
-  //       />
-  //       <View
-  //         style={{
-  //             alignSelf: 'flex-end',
-  //             paddingBottom: 10,
-  //             paddingRight: 10,
-  //         }}
-  //       >
-  //         <TouchableOpacity
-  //           onPress={this.modalOpen}
-  //           style={{
-  //               borderWidth: 2,
-  //               borderColor: 'rgba(0, 0, 0, 0.2)',
-  //               alignItems: 'center',
-  //               width: 100,
-  //               height: 100,
-  //               backgroundColor: '#024878',
-  //               borderRadius: 50,
-  //           }}
-  //         >
-  //           <Text
-  //             style={{
-  //               textAlign: 'center',
-  //               paddingTop: 15,
-  //               fontSize: 50,
-  //               color: '#FFF'   
-  //             }}
-  //           >
-  //             +
-  //           </Text>   
-  //         </TouchableOpacity>
-  //         <Modal
-  //           animationType="slide"
-  //           visible={this.state.modalVisible}
-  //         >
-  //           <SafeAreaView>
-  //               <TouchableOpacity
-  //               style = {{
-  //                   alignItems: 'center',
-  //               }}
-  //               onPress = {this.modalClose}
-  //               >
-  //                   <Text>Done</Text>
-  //               </TouchableOpacity>
-  //           </SafeAreaView>
-  //         </Modal>
-  //       </View>
-  //     </View>
-  //   );
-  // }
 
   CalendarScreen() {
     return (
@@ -558,6 +452,7 @@ export class Home extends React.Component {
         <Tab.Navigator>
           <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options={{ tabBarBadge: 3 }}/>
           <Tab.Screen name="Input" component={this.InputScreen.bind(this)} />
+          <Tab.Screen name="Recommendation" component={this.RecommendationScreen.bind(this)}/>
           <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
