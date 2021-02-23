@@ -141,7 +141,7 @@ export class Home extends React.Component {
     }
 
     async getAllScores() {
-      const url = "http://127.0.0.1:5000/scores/get-scores";
+      const url = "https://botsecure.mangocircle.com:8000/scores/get-scores";
       await axios.get(url, {
           params: {
               username: this.props.username, 
@@ -158,8 +158,29 @@ export class Home extends React.Component {
               //     CumulativeScore: response.data[0].cumulative_score,
               
               // })
-              console.log("SUP");
-              console.log(response.data);
+              var dict = {}
+              for (var i = 0; i < response.data.length; i++) {
+                var day = '';
+                var month = '';
+                if (response.data[i].day < 10) {
+                  day = '0' + response.data[i].day.toString();
+                }
+                else {
+                  day = response.data[i].day.toString();
+                }
+                if (response.data[i].month < 10) {
+                  month = '0' + response.data[i].month.toString();
+                }
+                else {
+                  month = response.data[i].month.toString();
+                }
+                var date = response.data[i].year.toString() + '-' + month + '-' + day;
+                dict[date] = [{name: 'test', score: response.data[i].cumulative_score, sleep: response.data[i].subscores.sleep.value, steps: 100}];
+              }
+              this.setState({items: dict});
+              // this.setState({items: {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]}});
+              console.log("YOO YO");
+              console.log(this.state.items);
               
           }
       }).catch((response) => {
