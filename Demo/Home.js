@@ -34,7 +34,7 @@ import AppleHealthKit from 'rn-apple-healthkit';
 import GoalInput from './GoalInput.js';
 import Recommendation from './Recommendation.js';
 
-
+navigator.geolocation = require('@react-native-community/geolocation');
 const axios = require('axios');
 const Stack = createStackNavigator();
 const testIDs = require('./testIDs');
@@ -63,6 +63,7 @@ export class Home extends React.Component {
       modalScoreVisible: false,
       CumulativeScore: false,
       refreshing: false,
+      location: null,
     };
 
     this.modalOpen = this.modalOpen.bind(this);
@@ -74,6 +75,8 @@ export class Home extends React.Component {
     this.getAllScores = this.getAllScores.bind(this);
     this.refreshScreen = this.refreshScreen.bind(this);
     this.inputAppleHealthIntoDatabase = this.inputAppleHealthIntoDatabase.bind(this);
+    this.getLocation = this.getLocation.bind(this);
+    this.RecommendationScreen = this.RecommendationScreen.bind(this);
   }
 
     modalOpen() {
@@ -187,12 +190,36 @@ export class Home extends React.Component {
           console.log(response);
       })
   }
+    async getLocation() {
+        navigator.geolocation.requestAuthorization();
+        navigator.geolocation.getCurrentPosition(
+            position => {
+              const location = JSON.stringify(position);
+          
+              this.setState({ location });
+              console.log(this.state.location);
+            //   var coords = JSON.parse(this.state.location).coords;
+            //   axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
+            //   {
+            //     latitude: coords.latitude,
+            //     longitude: coords.longitude,
+            // }).then((response) => {
+            //     console.log(response);
+            // }).catch((response) => {
+            //     console.log(response);
+            // })
+            },
+            error => Alert.alert(error.message),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+          );
+    }
 
     async componentDidMount() {
         //API calls to data base getting sleep and weights etc.
         await this.getAppleHealthData();
         await this.getDataFromDatabase();
         await this.getAllScores();
+        await this.getLocation();
 
         console.log(this.state);
     }
@@ -245,6 +272,7 @@ export class Home extends React.Component {
 
     async refreshScreen() {
         await this.inputAppleHealthIntoDatabase();
+        await this.getLocation();
     }
 
     HomeScreen() {
@@ -318,8 +346,9 @@ export class Home extends React.Component {
   }
 
   RecommendationScreen() {
+    const coords = JSON.parse(this.state.location).coords
     return (
-      <Recommendation/>
+      <Recommendation latitude = {coords.latitude} longitude = {coords.longitude}/>
     );
 }
 
