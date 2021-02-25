@@ -400,7 +400,8 @@ export class Home extends React.Component {
 
   onDayPress(day) {
     console.log(day);
-    axios.get('http://127.0.0.1:5000/scores/get-scores', {
+    const url = "https://botsecure.mangocircle.com:8000/scores/get-score";
+    axios.get(url, {
       params: {
         username: 'a', 
         month: day.month, 
@@ -412,10 +413,10 @@ export class Home extends React.Component {
         'Content-Type': 'application/json'
       }
     })
-    .then(function (response) {
+    .then((response) => {
       console.log(response.data);
     })
-    .catch(function (error) {
+    .catch((error) => {
       console.log(error);
     })
     .then(function () {
