@@ -5,6 +5,7 @@ import os
 import googlemaps
 
 app = Flask(__name__)
+print("MONGO URL", os.environ.get('MONGO_URL'))
 app.config['MONGO_URI'] = os.environ.get('MONGO_URL')
 load_dotenv()
 
