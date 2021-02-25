@@ -6,7 +6,8 @@ from pkg import truncate
 
 PRECISION = 4
 LAT_LONG_FILE = 'us-zip-code-latitude-and-longitude.json'
-URL = 'http://127.0.0.1:5000/index/add-location'
+URL = os.environ.get('SERVER_URL')
+print('URL', URL)
 
 with open(LAT_LONG_FILE, 'r') as data_file:
     data = json.load(data_file)
