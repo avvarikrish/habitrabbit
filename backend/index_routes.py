@@ -91,5 +91,7 @@ def get_locations():
 def score(recommendation: Recommendation, min_steps):
     rec_steps = recommendation.get_steps()
     if rec_steps < min_steps:
-        return 0
+        return (recommendation.get_frequency() / 100) + (rec_steps / 100)
+    if rec_steps > min_steps + 1000:
+        return (recommendation.get_frequency() / rec_steps) + (1 / rec_steps)
     return recommendation.get_frequency() + (1 / rec_steps) + (1 / recommendation.get_time())
