@@ -99,6 +99,7 @@ export class App extends React.Component {
       })
     })
       .then((response) => {
+        console.log(response);
         if (response["status"] == 200) {
           this.setState({userToken: true, username: username});
         } else {

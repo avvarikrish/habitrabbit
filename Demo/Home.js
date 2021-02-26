@@ -64,6 +64,34 @@ export class Home extends React.Component {
       CumulativeScore: false,
       refreshing: false,
       location: null,
+    //   places: [],
+      places: [{
+            "latitude": 37.680181, 
+            "longitude": -121.921498, 
+            "frequency": 18, 
+            "steps": 48368.7534, 
+            "address": "7700 Highland Oaks Dr, Pleasanton, CA 94588, USA", 
+            "time": 28080, 
+            "time_str": "7 hours 48 mins"
+        }, 
+        {
+            "latitude": 37.527237, 
+            "longitude": -121.9679, 
+            "frequency": 1, 
+            "steps": 5724.2526, 
+            "address": "4551 Carol Ave, Fremont, CA 94538, USA", 
+            "time": 3254,
+            "time_str": "54 mins"
+        },
+        {
+            "latitude": 37.515014, 
+            "longitude": -121.92916, 
+            "frequency": 1, 
+            "steps": 7253.0821000000005,
+            "address": "44152 Glendora Dr, Fremont, CA 94539, USA", 
+            "time": 4169, 
+            "time_str": "1 hour 9 mins"
+        }],
     };
 
     this.modalOpen = this.modalOpen.bind(this);
@@ -77,6 +105,7 @@ export class Home extends React.Component {
     this.inputAppleHealthIntoDatabase = this.inputAppleHealthIntoDatabase.bind(this);
     this.getLocation = this.getLocation.bind(this);
     this.RecommendationScreen = this.RecommendationScreen.bind(this);
+    // this.getRecommendations = this.getRecommendations.bind(this);
   }
 
     modalOpen() {
@@ -194,25 +223,74 @@ export class Home extends React.Component {
         navigator.geolocation.requestAuthorization();
         navigator.geolocation.getCurrentPosition(
             position => {
-              const location = JSON.stringify(position);
+                const location = JSON.stringify(position);
           
-              this.setState({ location });
-              console.log(this.state.location);
-            //   var coords = JSON.parse(this.state.location).coords;
-            //   axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
-            //   {
-            //     latitude: coords.latitude,
-            //     longitude: coords.longitude,
-            // }).then((response) => {
-            //     console.log(response);
-            // }).catch((response) => {
-            //     console.log(response);
-            // })
+                this.setState({ location });
+                console.log("ASDFASDFDSAF");
+                console.log(this.state.location);
+            
+                const coords = JSON.parse(this.state.location).coords;
+                const url = "https://botsecure.mangocircle.com:8000/index/get-locations";
+
+                let goal = 10000;
+
+                if (this.state.Steps && this.state.StepGoal){
+                    goal = this.state.StepGoal - this.state.Steps.value;
+                }
+                else if (!this.state.Steps && this.state.StepGoal){
+                    goal = this.state.StepGoal
+                }
+                console.log(goal);
+                axios.get(url, {
+                params: {
+                    longitude: coords.longitude,
+                    latitude: coords.latitude,
+                    steps: goal,
+                
+                },
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                }
+                })
+                .then((response) => {
+                    this.setState({ places: response.data });
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
             },
             error => Alert.alert(error.message),
             { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
           );
     }
+
+    // async getRecommendations() {
+    //     if (this.state.location){
+    //         const coords = JSON.parse(this.state.location).coords;
+    //         const url = "https://botsecure.mangocircle.com:8000/index/get-locations";
+    //         axios.get(url, {
+    //         params: {
+    //             longitude: coords.longitude,
+    //             latitude: coords.latitude,
+    //             steps: 1000,
+            
+    //         },
+    //         headers: {
+    //             Accept: 'application/json',
+    //             'Content-Type': 'application/json'
+    //         }
+    //         })
+    //         .then((response) => {
+    //             this.setState({ places: response.data });
+    //             console.log(response);
+    //         })
+    //         .catch((error) => {
+    //             console.log(error);
+    //         })
+    //     }
+    // }
 
     async componentDidMount() {
         //API calls to data base getting sleep and weights etc.
@@ -220,6 +298,7 @@ export class Home extends React.Component {
         await this.getDataFromDatabase();
         await this.getAllScores();
         await this.getLocation();
+        // await this.getRecommendations();
 
         console.log(this.state);
     }
@@ -273,6 +352,7 @@ export class Home extends React.Component {
     async refreshScreen() {
         await this.inputAppleHealthIntoDatabase();
         await this.getLocation();
+        // await this.getRecommendations();
     }
 
     HomeScreen() {
@@ -348,7 +428,7 @@ export class Home extends React.Component {
   RecommendationScreen() {
     const coords = JSON.parse(this.state.location).coords
     return (
-      <Recommendation latitude = {coords.latitude} longitude = {coords.longitude}/>
+      <Recommendation latitude = {coords.latitude} longitude = {coords.longitude} steps = {this.state.Steps} places = {this.state.places}/>
     );
 }
 
