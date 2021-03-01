@@ -17,6 +17,9 @@ def add_score():
         username = score_info['username']
         date = datetime.now()
         month, day, year = date.month, date.day, date.year
+        if 'date' in score_info:
+            date = score_info['date']
+            month, day, year = date['month'], date['day'], date['year']
 
         user = users_collection.find_one({'username': username})
         if user is None:
