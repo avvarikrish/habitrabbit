@@ -7,8 +7,8 @@ def user_bson(user_info, call_type):
     }
     if call_type == 'create':
         bson_value['goals'] = {
-            'sleep': user_goal_bson(8, 0.5),
-            'steps': user_goal_bson(10000, 0.5)
+            'sleep': user_goal_bson(8, 0.5, 8),
+            'steps': user_goal_bson(10000, 0.5, None)
         }
 
     return bson_value
@@ -28,14 +28,15 @@ def score_bson(username, month, day, year, sleep_score, steps_score):
 
 def goals_bson(goals_info):
     return {
-        'sleep' : user_goal_bson(goals_info['sleep']['goal'], goals_info['sleep']['weight']),
-        'steps' : user_goal_bson(goals_info['steps']['goal'], goals_info['steps']['weight'])
+        'sleep' : user_goal_bson(goals_info['sleep']['goal'], goals_info['sleep']['weight'], goals_info['sleep']['time']),
+        'steps' : user_goal_bson(goals_info['steps']['goal'], goals_info['steps']['weight'], None)
     }
 
-def user_goal_bson(value, weight):
+def user_goal_bson(value, weight, time):
     return {
         'goal': value,
-        'weight': weight
+        'weight': weight,
+        'time': time
     }
 
 def index_bson(longitude, latitude):

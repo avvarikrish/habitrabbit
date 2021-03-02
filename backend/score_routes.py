@@ -105,6 +105,7 @@ def update_goals():
         scores_collection.update_one({'username': goals_info['username'], 'month': month, 'day': day, 'year': year},
                                     {'$set': {'subscores.sleep.goal': new_goals['sleep']['goal'],
                                             'subscores.sleep.weight': new_goals['sleep']['weight'],
+                                            'subscores.sleep.time': new_goals['sleep']['time'],
                                             'subscores.steps.goal': new_goals['steps']['goal'],
                                             'subscores.steps.weight': new_goals['steps']['weight'],
                                             }
