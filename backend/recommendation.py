@@ -7,6 +7,7 @@ class Recommendation:
         self._address = ''
         self._time = 0
         self._time_str = ''
+        self._valid_weather_times = []
 
     def get_latitude(self):
         return self._latitude
@@ -50,6 +51,9 @@ class Recommendation:
     def set_time_str(self, time_str):
         self._time_str = time_str
 
+    def add_weather_time(self, weather_time):
+        self._valid_weather_times.append(weather_time)
+
     def to_json(self):
         return {
             'latitude': self._latitude,
@@ -58,5 +62,6 @@ class Recommendation:
             'steps': self._steps,
             'address': self._address,
             'time': self._time,
-            'time_str': self._time_str
+            'time_str': self._time_str,
+            'valid_weather_times': self._valid_weather_times
         }
