@@ -87,7 +87,7 @@ def get_recommendations():
 
             duration_hour = element['duration']['value'] / 3600
             for weather_time in valid_weather_times:
-                if weather_time['valid'] and weather_time['end'] - weather_time['start'] >= duration_hour:
+                if weather_time['end'] - weather_time['start'] >= duration_hour:
                     recommendations[i].add_weather_time(weather_time)
 
         sorted_recommendations = sorted(recommendations, key=lambda rec: score(rec, steps), reverse=True)
