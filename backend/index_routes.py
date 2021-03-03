@@ -8,10 +8,11 @@ from pkg import truncate
 import os
 import requests
 import datetime
+import math
 
 index_api = Blueprint('index_api', __name__)
 
-from app import index_collection, gmaps
+from app import index_collection, gmaps, users_collection
 
 MAX_LOCATIONS = 25
 METER_TO_STEP = 1.3123
@@ -47,9 +48,32 @@ def get_recommendations():
         longitude_two_dec = truncate(float(args['longitude']), 2)
         latitude_two_dec = truncate(float(args['latitude']), 2)
         steps = int(args['steps'])
+        sleep = int(args['sleep'])
+        username = args['username']
         destinations = []
         recommendations = []
         final_recommendations = []
+
+        current_time = datetime.datetime.now()
+        current_hour, current_min = current_time.hour, current_time.minute
+        user = users_collection.find_one({'username': username})
+        if user is None:
+            response = make_response(Response('user not found: ' + username), 401)
+        else:
+            wakeup_time = user['goals']['sleep']['time']
+            sleep_goal = user['goals']['sleep']['goal']
+            wakeup_hour = math.floor(wakeup_time)
+            wakeup_min = 60 * (wakeup_time-wakeup_hour)
+            if wakeup_hour <= current_hour:
+                wakeup_hour += 24
+            if wakeup_min <= current_min:
+                wakeup_hour -= 1
+                wakeup_min += 60
+
+            
+            print(datetime.time(wakeup_hour, wakeup_min, 0, 0))
+            print(datetime.time(current_hour, current_min, 0, 0))
+            print(datetime.time(wakeup_hour, wakeup_min, 0, 0) - datetime.time(current_hour, current_min, 0, 0))
 
         weather_url = 'https://api.openweathermap.org/data/2.5/onecall?lat=' + str(latitude_two_dec) + '&lon=' + str(longitude_two_dec) + '&exclude=daily,current,minutely&appid=' + os.environ.get('OPEN_WEATHER_KEY') + '&units=imperial'
         weather_response = requests.get(weather_url)
