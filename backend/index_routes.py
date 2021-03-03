@@ -87,7 +87,7 @@ def get_recommendations():
 
             duration_hour = element['duration']['value'] / 3600
             for weather_time in valid_weather_times:
-                if weather_time['end'] - weather_time['start'] >= duration_hour:
+                if weather_time['valid'] and weather_time['end'] - weather_time['start'] >= duration_hour:
                     recommendations[i].add_weather_time(weather_time)
 
         sorted_recommendations = sorted(recommendations, key=lambda rec: score(rec, steps), reverse=True)
@@ -129,12 +129,16 @@ def weather_parse(weather_response):
                     is_valid = False
                     break
         
-        if is_valid and hour['weather'][0]['id'] // 100 == 8:
+        
             if previous == current_hour - 1:
                 final_weather_list[-1]['end'] += 1
                 final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
             else:
-                final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main']})
+                if is_valid and hour['weather'][0]['id'] // 100 == 8:
+                    final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': True})
+                else:
+                    final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': False})
+
             previous = current_hour
 
         one_complete = True
