@@ -130,16 +130,16 @@ def weather_parse(weather_response):
                     break
         
         
-            if previous == current_hour - 1:
-                final_weather_list[-1]['end'] += 1
-                final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
+        if previous == current_hour - 1:
+            final_weather_list[-1]['end'] += 1
+            final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
+        else:
+            if is_valid and hour['weather'][0]['id'] // 100 == 8:
+                final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': True})
             else:
-                if is_valid and hour['weather'][0]['id'] // 100 == 8:
-                    final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': True})
-                else:
-                    final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': False})
+                final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': False})
 
-            previous = current_hour
+        previous = current_hour
 
         one_complete = True
     return final_weather_list
