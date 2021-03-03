@@ -140,7 +140,7 @@ def score(recommendation: Recommendation, min_steps):
 
 def weather_parse(weather_response):
     final_weather_list = []
-    previous = -2
+    previous_valid = -2
     one_complete = False
     for hour in weather_response['hourly']:
         current_hour = datetime.datetime.fromtimestamp(int(hour['dt'])).hour
@@ -154,16 +154,21 @@ def weather_parse(weather_response):
                     break
         
         
-        if previous == current_hour - 1:
-            final_weather_list[-1]['end'] += 1
-            final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
-        else:
-            if is_valid and hour['weather'][0]['id'] // 100 == 8:
+            
+        if is_valid and hour['weather'][0]['id'] // 100 == 8:
+            if previous_valid != 1:
                 final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': True})
             else:
+                final_weather_list[-1]['end'] += 1
+                final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
+            previous_valid = 1
+        else:
+            if previous_valid != 2:
                 final_weather_list.append({'start': current_hour, 'end': current_hour + 1, 'temp': hour['temp'], 'description': hour['weather'][0]['main'], 'valid': False})
-
-            previous = current_hour
+            else:
+                final_weather_list[-1]['end'] += 1
+                final_weather_list[-1]['temp'] = (final_weather_list[-1]['temp'] + hour['temp']) / 2
+            previous_valid = 2
 
         one_complete = True
     return final_weather_list
