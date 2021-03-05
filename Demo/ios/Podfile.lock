@@ -238,7 +238,7 @@ PODS:
     - React-cxxreact (= 0.63.3)
     - React-jsi (= 0.63.3)
   - React-jsinspector (0.63.3)
-  - react-native-date-picker (3.2.9):
+  - react-native-date-picker (3.2.10):
     - React-Core
   - react-native-geolocation (2.0.2):
     - React
@@ -506,7 +506,7 @@ SPEC CHECKSUMS:
   React-jsi: df07aa95b39c5be3e41199921509bfa929ed2b9d
   React-jsiexecutor: b56c03e61c0dd5f5801255f2160a815f4a53d451
   React-jsinspector: 8e68ffbfe23880d3ee9bafa8be2777f60b25cbe2
-  react-native-date-picker: 7f35e3562bfd46232f6f87dc4f4c30c5cd06aa4a
+  react-native-date-picker: 242eec7af56cea5fb2706d5db5d3837060b3884b
   react-native-geolocation: cbd9d6bd06bac411eed2671810f454d4908484a8
   react-native-geolocation-service: 7c9436da6dfdecd9526c62eac62ea2bc3f0cc8ea
   react-native-safe-area-context: 86612d2c9a9e94e288319262d10b5f93f0b395f5
