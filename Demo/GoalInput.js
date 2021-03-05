@@ -20,7 +20,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-
+import DatePicker from 'react-native-date-picker';
 import {Picker} from '@react-native-picker/picker';
 const axios = require('axios');
 export class GoalInput extends React.Component {
@@ -31,6 +31,7 @@ export class GoalInput extends React.Component {
         SleepInput: "7",
         SleepGoalInput: "8",
         StepGoalInput: "10000",
+        Date: new Date(),
         };
 
         this.scoreAndGoalInput = this.scoreAndGoalInput.bind(this);
@@ -51,6 +52,9 @@ export class GoalInput extends React.Component {
         })
 
         // const url_goal = "http://127.0.0.1:5000/scores/update-goals";
+
+
+        // add what time they want to wake up everyday
         const url_goal = "https://botsecure.mangocircle.com:8000/scores/update-goals";
         const goal = 
             {
@@ -67,6 +71,7 @@ export class GoalInput extends React.Component {
             username: this.props.username, 
             goals: goal,
         }).then((response) => {
+            Alert.alert("You have inputted your scores!");
             console.log(response.data);
         }).catch((response) => {
             console.log(response);
@@ -86,7 +91,7 @@ export class GoalInput extends React.Component {
                     <View style = {styles.todayHeader}>
                         <Text style={styles.todayText}>Input</Text>
 
-                        <Text style={styles.subTitle}>Sleep</Text>
+                        <Text style={styles.subTitle}>Sleep:</Text>
 
                             <Picker
                             selectedValue={this.state.SleepInput}
@@ -145,6 +150,14 @@ export class GoalInput extends React.Component {
                                 onChangeText={(text) => this.setState({StepGoalInput: text})}
                             />
                         </View>
+                        <View style={{marginTop: "5%"}}>
+                            <Text style = {{fontSize: 20, fontFamily: "Avenir-Light",}}>Wake Up Time:</Text>
+                        </View>
+                        <DatePicker
+                            mode={"time"}
+                            date={this.state.Date}
+                            onDateChange={(day) => this.setState({ Date: day })}
+                        />
                         <TouchableOpacity
                             style = {styles.signinButton}
                             onPress = {this.scoreAndGoalInput}
@@ -242,7 +255,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: "10%",
+        marginTop: "3%",
     },
     container: {
         flex: 1,

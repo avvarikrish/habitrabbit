@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -29,10 +29,12 @@ import * as Progress from 'react-native-progress';
 import { NavigationContainer, } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import Dialog, { DialogContent } from 'react-native-popup-dialog';
 import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
 import AppleHealthKit from 'rn-apple-healthkit';
 import GoalInput from './GoalInput.js';
 import Recommendation from './Recommendation.js';
+import Carousel, { Pagination } from 'react-native-snap-carousel';
 
 navigator.geolocation = require('@react-native-community/geolocation');
 const axios = require('axios');
@@ -64,6 +66,7 @@ export class Home extends React.Component {
       CumulativeScore: false,
       refreshing: false,
       location: null,
+      weatherIndex: 0,
     //   places: [],
       places: [{
             "latitude": 37.680181, 
@@ -105,6 +108,10 @@ export class Home extends React.Component {
     this.inputAppleHealthIntoDatabase = this.inputAppleHealthIntoDatabase.bind(this);
     this.getLocation = this.getLocation.bind(this);
     this.RecommendationScreen = this.RecommendationScreen.bind(this);
+    this.todayScoreWdiget = this.todayScoreWidget.bind(this);
+    this.weatherWidget = this.weatherWidget.bind(this);
+    this.recommendationWidget = this.recommendationWidget.bind(this);
+    this.weatherIntervalBar = this.weatherIntervalBar.bind(this);
     // this.getRecommendations = this.getRecommendations.bind(this);
   }
 
@@ -266,38 +273,13 @@ export class Home extends React.Component {
           );
     }
 
-    // async getRecommendations() {
-    //     if (this.state.location){
-    //         const coords = JSON.parse(this.state.location).coords;
-    //         const url = "https://botsecure.mangocircle.com:8000/index/get-locations";
-    //         axios.get(url, {
-    //         params: {
-    //             longitude: coords.longitude,
-    //             latitude: coords.latitude,
-    //             steps: 1000,
-            
-    //         },
-    //         headers: {
-    //             Accept: 'application/json',
-    //             'Content-Type': 'application/json'
-    //         }
-    //         })
-    //         .then((response) => {
-    //             this.setState({ places: response.data });
-    //             console.log(response);
-    //         })
-    //         .catch((error) => {
-    //             console.log(error);
-    //         })
-    //     }
-    // }
 
     async componentDidMount() {
         //API calls to data base getting sleep and weights etc.
         await this.getAppleHealthData();
         await this.getDataFromDatabase();
         await this.getAllScores();
-        await this.getLocation();
+        // await this.getLocation();
         // await this.getRecommendations();
 
         console.log(this.state);
@@ -350,9 +332,248 @@ export class Home extends React.Component {
     }
 
     async refreshScreen() {
+        
         await this.inputAppleHealthIntoDatabase();
-        await this.getLocation();
+        // await this.getLocation();
         // await this.getRecommendations();
+        console.log(this.state);
+    }
+
+    todayScoreWidget() {
+
+        return (
+            <View style={styles.card}>
+                <View style = {styles.todayHeader}>
+                    <Text style={styles.todayText}>Today</Text>
+                    {(this.state.CumulativeScore) !== false ?
+                        <Text>Current Score: {this.state.CumulativeScore}</Text>
+                    : []
+                    }
+                </View>
+                <View style = {styles.container}>
+                    
+                    
+                    <View style={styles.body}>
+                        <View style={styles.sectionContainer}>
+                            {(this.state.Steps === 0 || this.state.Steps) ?
+                            <View style = {{width: "100%"}}>
+                                <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/this.state.StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"} unfilledColor={"white"}>
+                                    <Text style = {styles.progressBarMainText}>Steps</Text>
+                                    <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {this.state.StepGoal}</Text>
+                                </Progress.Bar>
+                            </View> : []
+                            }
+                            {(!this.state.Steps) ?
+                            <View style = {{width: "100%"}}>
+                                <Progress.Bar style = {{width: "100%"}} progress={0/10000} width={null} height={70} borderRadius={10} color={"#4287f5"} unfilledColor={"white"}>
+                                    <Text style = {styles.progressBarMainText}>Steps</Text>
+                                    <Text style = {styles.progressBarSubText}>Today: 0 / 10000</Text>
+                                </Progress.Bar>
+                            </View> : []
+                            }
+                        </View>
+                        <View style={styles.sectionContainer}>
+                            {(this.state.Sleep !== false && this.state.SleepGoal !== false) ?
+                            <View style = {{width: "100%"}}>
+                                <Progress.Bar style = {{width: "100%"}} progress={this.state.Sleep/this.state.SleepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"} unfilledColor={"white"}>
+                                    <Text style = {styles.progressBarMainText}>Sleep</Text>
+                                    <Text style = {styles.progressBarSubText}>Today: {this.state.Sleep} / {this.state.SleepGoal}</Text>
+                                </Progress.Bar>
+                            </View> : []
+                            }
+                            {(this.state.Sleep === false || this.state.SleepGoal === false) ? 
+                            <View style = {{width: "100%"}}>
+                                <Progress.Bar style = {{width: "100%"}} progress={0/8} width={null} height={70} borderRadius={10} color={"#4287f5"} unfilledColor={"white"}>
+                                    <Text style = {styles.progressBarMainText}>Sleep</Text>
+                                    <Text style = {styles.progressBarSubText}>Today: 0 / 8</Text>
+                                </Progress.Bar>
+                            </View> : []
+                            }
+                        </View>
+                    </View>
+                </View>
+            </View>
+        );
+    }
+
+    weatherIntervalBar() {
+        const denominator = 4.16;
+        let percent_width;
+        const percent_height = 20;
+        const entries = [{"start": 0, "end": 2, "description": false},{"start": 2, "end": 4, "temp": 50.67, "description": "Clear"}, {"start": 4, "end": 8, "description": false}, {"start": 8, "end": 24,
+        "temp": 40.35356933593749, "description": "Clouds"}];
+        return entries.map(data => {
+            percent_width = (data.end - data.start) * denominator;
+            const [open, setOpen] = useState(false);
+            var str_width = percent_width.toString() + "%";
+            
+            if (data.description){
+                let style_color;
+                let start;
+                let color;
+                let end;
+                if (data.start === 12){
+                    start = "12 P.M.";
+                } 
+                else if (data.start > 12){
+                    start = (data.start - 12).toString() + " P.M.";
+                }
+                else{
+                    start = (data.start).toString() + " A.M.";
+                }
+
+                if (data.end === 12){
+                    end = "12 P.M.";
+                } 
+                else if (data.end === 24){
+                    end = "Midnight"
+                }
+                else if (data.end > 12){
+                    end = (data.end - 12).toString() + " P.M.";
+                }
+                else{
+                    end = (data.end).toString() + " A.M.";
+                }
+
+                if (data.description == "Clear"){
+                    style_color = styles.weatherWidgetPopupClear;
+                    color = "#ffd571";
+                }
+                else {
+                    style_color = styles.weatherWidgetPopupClouds;
+                    // color = "#d3d3d3";
+                    color = "#ffd571";
+                }
+                return(
+                    <TouchableOpacity key = {data.start} onPress = {() => setOpen(true)}  style={{width: str_width, height: percent_height, backgroundColor: color, borderRadius: 2}}>
+                    
+                        <Dialog
+                            width = {0.9}
+                            height = {.2}
+                            visible={open}
+                            onTouchOutside={() => setOpen(false)}
+                        >
+                            <View style = {style_color}>
+                                <Text style={styles.weatherWidgetTitle}>{start} - {end}</Text>
+                                <View>
+                                    <Text style = {styles.weatherTempNumberText}>{data.description} {Math.round(data.temp)}°</Text>
+                                </View>
+                                {/* <View style={styles.cardBottom}>
+                                    <View style={styles.weatherTempNumber}>
+                                        <Text style = {styles.weatherTempNumberText}>{Math.round(data.temp)}°</Text>
+                                    </View>
+                                    <View style={styles.weatherTempString}>
+                                        <Text style = {styles.weatherTempStringText}>{data.description}</Text>
+                                    </View>
+                                </View> */}
+                                
+                            </View>
+                        </Dialog>
+                    </TouchableOpacity>
+                );
+            }
+            else{
+                return(
+                    <View key = {data.start} style={{width: str_width, height: percent_height, backgroundColor: "#b5b5b5", borderRadius: 2}} />
+                );
+            }
+        });
+    }
+
+    weatherWidget() {
+        
+
+        return (
+            <View style={styles.walkCardContainer}>
+                
+                {/* <View style={styles.cardBottom}>
+                    <View style={styles.weatherTempNumber}>
+                        <Text style = {styles.weatherTempNumberText}>91°</Text>
+                    </View>
+                    <View style={styles.weatherTempString}>
+                        <Text style = {styles.weatherTempStringText}>Sunny</Text>
+                    </View>
+                </View> */}
+                
+                <View style = {styles.todayHeader}>
+                    <View style={{alignItems: "center"}}>
+                        <Text style={styles.todayText}>Recommended Walk</Text>
+                    </View>
+                    {/* <View style={{flex: 1, flexDirection: "row", justifyContent: "flex-end", marginRight: 10}}>
+                        <Text style={{fontSize: 20}}>></Text>
+                    </View> */}
+                    
+                </View>
+                <TouchableOpacity style ={styles.weatherCardCenter}>
+                        {/* <Text style = {styles.cardTextHeader}>Address: </Text> */}
+                    <View>
+                        <Text style = {styles.cardText}>7700 Highland Oaks Dr, Pleasanton, CA 94588, USA</Text>
+                    </View>
+                    
+                    <View style={styles.cardBottom}>
+                        <View style={styles.cardBottomItem1}>
+                            <Text style = {styles.cardText}>Steps: 1000</Text>
+                        </View>
+                        <View style={styles.cardBottomItem2}>
+                            <Text style = {styles.cardText}>Time: 10 minutes</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+                <View style= {styles.weatherForecast}>
+                    <Text style={styles.weatherForcastTitle}>Forecast</Text>
+                </View>
+                <View style={styles.cardBottom}>
+                    <View style={styles.weatherTempNumber}>
+                        <Text style = {styles.weatherHourStart}>12 A.M.</Text>
+                    </View>
+                    <View style={styles.weatherTempString}>
+                        <Text style = {styles.weatherHourEnd}>12 A.M.</Text>
+                    </View>
+                </View>
+                <View style={{flex: 1, flexDirection: 'row', width: "90%", backgroundColor: "#c7f5ff"}}>
+                    {this.weatherIntervalBar()}
+                </View>
+                {/* <TouchableOpacity style={{width: "95%", height: 30, justifyContent: "center", backgroundColor: "#c7f5ff", alignItems: "center", flex: 1, borderRadius: 10, marginTop: "5%"}}>
+                    <Text>GO!</Text>
+                </TouchableOpacity> */}
+            </View>
+
+        );
+    }
+
+    recommendationWidget() {
+        return (
+            <View style={styles.cardCenter}>
+                <View style = {styles.todayHeader}>
+                    <Text style={styles.todayText}>Recommended Sleep</Text>
+                </View>
+                <View style={{flex: 1, flexDirection: 'row', marginTop: "5%"}}>
+                    {/* <View style={{width: "30%", height: 50, marginRight: "1%", alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>Bedtime:</Text>
+                    </View> */}
+                    
+                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>1</Text>
+                    </View>
+                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>1</Text>
+                    </View>
+                    <View style={{width: "2%", height: 50, marginRight: "1%", alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>:</Text>
+                    </View>
+                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>0</Text>
+                    </View>
+                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>0</Text>
+                    </View>
+                    <View style={{width: "10%", height: 50, alignItems: "center", justifyContent: "center"}}>
+                        <Text style = {styles.weatherForcastTitle}>P.M.</Text>
+                    </View>
+
+                </View>
+            </View>
+        );
     }
 
     HomeScreen() {
@@ -370,48 +591,14 @@ export class Home extends React.Component {
                           onRefresh={this.refreshScreen}
                         />
                     }>
-                    <View style = {styles.todayHeader}>
-                        <Text style={styles.todayText}>Today</Text>
-                    </View>
-                    <View style = {styles.container}>
+                    <View style={styles.center}>
+                        {this.todayScoreWdiget()}
                         
-                        {(this.state.CumulativeScore) !== false ?
-                        <View style = {styles.todayHeader}>
-                            <Text>Current Score: {this.state.CumulativeScore}</Text>
-                        </View> : []
-                        }
-                        <View style={styles.body}>
-                            <View style={styles.sectionContainer}>
-                                {(this.state.Steps === 0 || this.state.Steps) ?
-                                <View style = {{width: "100%"}}>
-                                    <Progress.Bar style = {{width: "100%"}} progress={this.state.Steps.value/this.state.StepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                                        <Text style = {styles.progressBarMainText}>Steps</Text>
-                                        <Text style = {styles.progressBarSubText}>Today: {this.state.Steps.value} / {this.state.StepGoal}</Text>
-                                    </Progress.Bar>
-                                </View> : []
-                                }
-                                {(!this.state.Steps) &&
-                                <Text style={styles.sectionDescriptionError}>
-                                    Add your steps to Health App!
-                                </Text>
-                                }
-                            </View>
-                            <View style={styles.sectionContainer}>
-                                {(this.state.Sleep !== false && this.state.SleepGoal !== false) ?
-                                <View style = {{width: "100%"}}>
-                                    <Progress.Bar style = {{width: "100%"}} progress={this.state.Sleep/this.state.SleepGoal} width={null} height={70} borderRadius={10} color={"#4287f5"}>
-                                        <Text style = {styles.progressBarMainText}>Sleep</Text>
-                                        <Text style = {styles.progressBarSubText}>Today: {this.state.Sleep} / {this.state.SleepGoal}</Text>
-                                    </Progress.Bar>
-                                </View> : []
-                                }
-                                {(this.state.Sleep === false || this.state.SleepGoal === false) ? 
-                                <Text style={styles.sectionDescriptionError}>
-                                    Add your sleep data to the App!
-                                </Text> : []
-                                }
-                            </View>
-                        </View>
+                        {this.weatherWidget()}
+
+                        {this.recommendationWidget()}
+                        
+                        
                     </View>
                 </ScrollView>
                 </SafeAreaView>
@@ -426,9 +613,9 @@ export class Home extends React.Component {
   }
 
   RecommendationScreen() {
-    const coords = JSON.parse(this.state.location).coords
+    // const coords = JSON.parse(this.state.location).coords
     return (
-      <Recommendation latitude = {coords.latitude} longitude = {coords.longitude} steps = {this.state.Steps} places = {this.state.places}/>
+      <Recommendation places = {this.state.places}/>
     );
 }
 
@@ -536,23 +723,25 @@ export class Home extends React.Component {
 
   CalendarScreen() {
     return (
-      <View style={{ flex: 1}}>
-          
-        <Agenda 
-          // testID={testIDs.agenda.CONTAINER}
-          items={this.state.items}
-          renderEmptyData={this.renderEmptyDate.bind(this)}
-          
-          // loadItemsForMonth={this.loadItems.bind(this)}
-          // rowHasChanged={this.rowHasChanged.bind(this)}
-          onDayPress={this.onDayPress.bind(this)}
-          renderItem={this.renderItem.bind(this)}
-          theme = {{
-            selectedDayBackgroundColor: '#00adf5',
-          }}
-                
-        />
-      </View>
+
+        <View style={{ flex: 1}}>
+            
+            <Agenda 
+            // testID={testIDs.agenda.CONTAINER}
+            items={this.state.items}
+            renderEmptyData={this.renderEmptyDate.bind(this)}
+            
+            // loadItemsForMonth={this.loadItems.bind(this)}
+            // rowHasChanged={this.rowHasChanged.bind(this)}
+            onDayPress={this.onDayPress.bind(this)}
+            renderItem={this.renderItem.bind(this)}
+            theme = {{
+                selectedDayBackgroundColor: '#00adf5',
+            }}
+                    
+            />
+        </View>
+
     );
   }
 
@@ -560,9 +749,9 @@ export class Home extends React.Component {
   render() {
     return (
         <Tab.Navigator>
-          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options={{ tabBarBadge: 3 }}/>
-          <Tab.Screen name="Input" component={this.InputScreen.bind(this)} />
-          <Tab.Screen name="Recommendation" component={this.RecommendationScreen.bind(this)}/>
+          <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options = {{headerShown: false}}/>
+          <Tab.Screen name="Input" component={this.InputScreen.bind(this)} options = {{headerShown: false}}/>
+          <Tab.Screen name="Recommendation" component={this.RecommendationScreen.bind(this)} options = {{headerShown: false}}/>
           <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
@@ -570,12 +759,172 @@ export class Home extends React.Component {
 }
 
 const styles = StyleSheet.create({
+
+    weatherForecast: {
+        paddingTop: "5%",
+        // backgroundColor: "#c7f5ff",
+    },
+    weatherForcastTitle: {
+        fontFamily: "Avenir-Light",
+        fontSize: 20,
+    },
+    weatherWidgetTitle: {
+        fontFamily: "Avenir-Light",
+        fontSize: 30,
+        // marginTop: "5%",
+    },
+    weatherWidgetPopupClear: {
+        flex: 1,
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#c7f5ff",
+    },
+    weatherWidgetPopupClouds: {
+        flex: 1,
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#afb6b9",
+    },
+    weatherTempStringText: {
+        alignSelf: "flex-end",
+        marginTop: 5,
+        marginLeft: "5%",
+        marginRight: "20%",
+        color: "#001e42",
+        fontFamily: "Avenir-Light",
+        fontSize: 25,
+    },
+    weatherTempNumberText: {
+        // marginTop: 5,
+        // marginLeft: "15%",
+        // marginRight: "5%",
+        color: "#001e42",
+        fontFamily: "Avenir-Light",
+        fontSize: 25,
+    },
+    weatherHourEnd: {
+        alignSelf: "flex-end",
+        marginTop: 5,
+        marginLeft: "5%",
+        marginRight: "5%",
+        color: "#001e42",
+        fontFamily: "Avenir-Light",
+        fontSize: 10,
+    },
+    weatherHourStart: {
+        marginTop: 5,
+        marginLeft: "0%",
+        marginRight: "5%",
+        color: "#001e42",
+        fontFamily: "Avenir-Light",
+        fontSize: 10,
+    },
+    weatherTempNumber: {
+        width: "50%", 
+        height: "100%",
+        // backgroundColor: "#c7f5ff",
+    },
+    weatherTempString: {
+        width: "50%", 
+        height: "100%",
+    },
+    
+    cardText: {
+        marginTop: 5,
+        marginLeft: "5%",
+        marginRight: "5%",
+        color: "#001e42",
+        fontFamily: "Avenir-Light",
+        fontSize: 18,
+    },
+    cardBottom: {
+        paddingLeft: "3.5%", 
+        flex: 1, 
+        flexDirection: 'row', 
+        // backgroundColor: "#c7f5ff",
+    },
+    cardBottomItem1: {
+        width: "35%", 
+        height: "100%",
+        // backgroundColor: "white"
+    },
+    cardBottomItem2: {
+        width: "65%", 
+        height: "100%",
+        // backgroundColor: "white"
+    },
+    cardCenter: {
+        flex: 1,
+        width: "95%",
+        // paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "white",
+        borderRadius: 10,
+        marginTop: "2%",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    weatherCardCenter: {
+        flex: 1,
+        width: "87%",
+        // marginLeft: "8%",
+        paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "white",
+        // backgroundColor: "#e6e6e6",
+        borderRadius: 10,
+        marginTop: "2%",
+        // marginLeft: "5%",
+        borderWidth: 1,
+        // justifyContent: "center",
+        // alignItems: "center",
+    },
+    center: {
+        // flex: 1,
+        justifyContent: "center",
+        alignItems: 'center',
+        height: "100%",
+    },
+    card: {
+        flex: 1,
+        width: "95%",
+        // paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "white",
+        // backgroundColor: "#fff3e6",
+        borderRadius: 10,
+        marginTop: "2%",
+
+    },
+    walkCard: {
+        flex: 1,
+        width: "100%",
+        paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "#1a508b",
+        borderRadius: 10,
+        // marginTop: "5%",
+    },
     goalInput: {
         height: "30%",
         width: "75%",
         borderBottomColor: "#024878",
         borderBottomWidth: 2,
         // marginBottom: "10%",
+    },
+    walkCardContainer: {
+        flex: 1,
+        width: "95%",
+        // paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "white",
+        // backgroundColor: "#B5F1F3",
+        borderRadius: 10,
+        marginTop: "2%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     sleepInputModalClose: {
         alignSelf: 'flex-end',
@@ -620,12 +969,17 @@ const styles = StyleSheet.create({
     todayText: {
         fontFamily: "Avenir-Light",
         fontSize: 30,
+        color: "white"
     },
     todayHeader: {
+        width: "100%",
+        borderRadius: 10,
+        backgroundColor: "#1a508b",
         textAlign: "center",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 10
+        paddingBottom: 10,
+        paddingTop: 10
     },
     container: {
         flex: 1,
@@ -652,13 +1006,14 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         height: "100%",
-        // backgroundColor: '#FFF',
+        backgroundColor: '#f2f2f2',
+        // backgroundColor: "white"
     },
     body: {
         // backgroundColor: '#FFF',
     },
     sectionContainer: {
-        marginTop: 32,
+        marginTop: 15,
         paddingHorizontal: 24,
     },
     sectionTitle: {

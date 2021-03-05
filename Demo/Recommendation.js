@@ -57,6 +57,7 @@ export class Recommendation extends React.Component {
 
         this.showRecommendations = this.showRecommendations.bind(this);
         this.goToLocation = this.goToLocation.bind(this);
+        this.showRecommendations2 = this.showRecommendations2.bind(this);
     }
 
     componentDidMount() {
@@ -98,11 +99,12 @@ export class Recommendation extends React.Component {
             latitude: data.latitude,
             longitude: data.longitude,
         }).then((response) => {
+            openMap({ end: data.address });
             console.log(response);
         }).catch((response) => {
             console.log(response);
         })
-        openMap({ end: data.address });
+        // openMap({ end: data.address });
       }
 
     showRecommendations() {
@@ -114,6 +116,30 @@ export class Recommendation extends React.Component {
                         <Text style = {styles.cardTextHeader}>{data.address}</Text>
                     </View>
                     <View style={styles.cardBottom}>
+                        <View style={styles.cardBottomItem1}>
+                            <Text style = {styles.cardText}>Steps: {Math.round(data.steps)}</Text>
+                        </View>
+                        <View style={styles.cardBottomItem2}>
+                            <Text style = {styles.cardText}>Time: {data.time_str}</Text>
+                        </View>
+                    </View>
+                    {/* <View style={{width: "100%", height: "1%", justifyContent: "center", alignItems: "center", marginTop: "5%"}}>
+                        <View style={{backgroundColor: "black", width: "50%", paddingTop: ".5%",}}></View>
+                    </View> */}
+                </TouchableOpacity>
+            )
+        });
+    }
+
+    showRecommendations2() {
+        return this.props.places.map(data => {
+            return(
+                <TouchableOpacity key = {data.address} style = {styles.card2} onPress={() => this.goToLocation(data)}>
+                    <View style ={{paddingBottom: "2%"}}>
+                        {/* <Text style = {styles.cardTextHeader}>Address: </Text> */}
+                        <Text style = {styles.cardTextHeader}>{data.address}</Text>
+                    </View>
+                    <View style={styles.cardBottom2}>
                         <View style={styles.cardBottomItem1}>
                             <Text style = {styles.cardText}>Steps: {Math.round(data.steps)}</Text>
                         </View>
@@ -135,6 +161,9 @@ export class Recommendation extends React.Component {
                     contentInsetAdjustmentBehavior="automatic"
                 >
                     <View style = {styles.center}>
+                        <View style={styles.title}>
+                            <Text style={styles.todayText}>Recommendations</Text>
+                        </View>
                         {/* <TouchableOpacity
                             onPress = {this.getLocation}
                         >
@@ -143,6 +172,8 @@ export class Recommendation extends React.Component {
                             </Text>
                         </TouchableOpacity> */}
                         {this.showRecommendations()}
+                        
+                        {/* {this.showRecommendations2()} */}
                     </View>
                 </ScrollView>
                 </SafeAreaView>
@@ -153,11 +184,39 @@ export class Recommendation extends React.Component {
 }
 
 const styles = StyleSheet.create({
-    cardBottom: {
+    title: {
+        marginTop: "5%",
+        marginBottom: "5%",
+    },
+    todayText: {
+        fontFamily: "Avenir-Light",
+        fontSize: 30,
+    },
+    card2: {
+        flex: 1,
+        width: "100%",
+        paddingTop: "3%",
+        paddingBottom: "3%",
+        backgroundColor: "#d8e0ed",
+        // borderRadius: 10,
+        // marginTop: "5%",
+        borderWidth: .5,
+        
+    },
+    cardBottom2: {
         paddingLeft: "3.5%", 
         flex: 1, 
         flexDirection: 'row', 
         backgroundColor: "white"
+    },
+    cardBottom: {
+        paddingLeft: "3.5%", 
+        // paddingBottom: "5%",
+        // borderRadius: 10,
+        flex: 1, 
+        flexDirection: 'row', 
+        backgroundColor: "white",
+
     },
     cardBottomItem1: {
         width: "35%", 
@@ -171,12 +230,13 @@ const styles = StyleSheet.create({
     },
     card: {
         flex: 1,
-        width: "85%",
+        width: "95%",
         paddingTop: "3%",
         paddingBottom: "3%",
         backgroundColor: "#d8e0ed",
+        // backgroundColor: "white",
         borderRadius: 10,
-        marginTop: "5%",
+        marginTop: "2%",
 
     },
     center: {
