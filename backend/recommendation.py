@@ -54,6 +54,9 @@ class Recommendation:
     def add_weather_time(self, weather_time):
         self._valid_weather_times.append(weather_time)
 
+    def set_latest_weather_time(self, valid):
+        self._valid_weather_times[-1]['valid'] = valid
+
     def to_json(self):
         return {
             'latitude': self._latitude,

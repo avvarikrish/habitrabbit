@@ -9,6 +9,8 @@ import os
 import requests
 import datetime
 import math
+import pytz
+import time
 
 index_api = Blueprint('index_api', __name__)
 
@@ -56,7 +58,7 @@ def get_locations():
         weather_response = requests.get(weather_url)
         # print(weather_response.json())
         valid_weather_times = weather_parse(weather_response.json())
-        print(valid_weather_times)
+        print('VALID WEATHER', valid_weather_times)
 
         locations = index_collection.find({'geometry': 
                                 {'$near': 
@@ -90,8 +92,9 @@ def get_locations():
 
             duration_hour = element['duration']['value'] / 3600
             for weather_time in valid_weather_times:
-                if weather_time['end'] - weather_time['start'] >= duration_hour:
-                    recommendations[i].add_weather_time(weather_time)
+                recommendations[i].add_weather_time(dict(weather_time))
+                if weather_time['end'] - weather_time['start'] < duration_hour:
+                    recommendations[i].set_latest_weather_time(False)
 
         sorted_recommendations = sorted(recommendations, key=lambda rec: score(rec, steps), reverse=True)
         for recommendation in sorted_recommendations:
@@ -115,7 +118,10 @@ def get_sleep():
     try:
         args = request.args.to_dict()
         username = args['username']
-        current_time = datetime.datetime.now()
+        tz = pytz.timezone('America/Los_Angeles')
+        current_time = datetime.datetime.fromtimestamp(time.time(), tz)
+        print('GET SLEEP', current_time)
+        # current_time = datetime.datetime.now()
         current_hour, current_min = current_time.hour, current_time.minute
         user = users_collection.find_one({'username': username})
         if user is None:
@@ -182,15 +188,19 @@ def score(recommendation: Recommendation, min_steps):
     return recommendation.get_frequency() + (1 / rec_steps) + (1 / recommendation.get_time())
 
 def weather_parse(weather_response):
+    print(weather_response)
     final_weather_list = []
     previous_valid = -2
     one_complete = False
-    first_hour = datetime.datetime.fromtimestamp(int(weather_response['hourly'][0]['dt'])).hour
+    tz = pytz.timezone('America/Los_Angeles')
+    first_hour = datetime.datetime.fromtimestamp(int(weather_response['hourly'][0]['dt']), tz).hour
+    print('WEATHER PARSE', first_hour)
     if first_hour > 0:
         final_weather_list.append({'start': 0, 'end': first_hour, 'temp': '', 'description': '', 'valid': False})
     for hour in weather_response['hourly']:
-        current_hour = datetime.datetime.fromtimestamp(int(hour['dt'])).hour
+        current_hour = datetime.datetime.fromtimestamp(int(hour['dt']), tz).hour
 
+        print(current_hour)
         if current_hour == 0 and one_complete:
             break
         is_valid = True
