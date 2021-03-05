@@ -38,8 +38,8 @@ def add_location():
     finally:
         return response
 
-@index_api.route('/get-recommendations', methods=['GET'])
-def get_recommendations():
+@index_api.route('/get-locations', methods=['GET'])
+def get_locations():
     response = []
     try:
         args = request.args.to_dict()
@@ -48,36 +48,15 @@ def get_recommendations():
         longitude_two_dec = truncate(float(args['longitude']), 2)
         latitude_two_dec = truncate(float(args['latitude']), 2)
         steps = int(args['steps'])
-        sleep = int(args['sleep'])
-        username = args['username']
         destinations = []
         recommendations = []
         final_recommendations = []
-
-        current_time = datetime.datetime.now()
-        current_hour, current_min = current_time.hour, current_time.minute
-        user = users_collection.find_one({'username': username})
-        if user is None:
-            response = make_response(Response('user not found: ' + username), 401)
-        else:
-            wakeup_time = user['goals']['sleep']['time']
-            sleep_goal = user['goals']['sleep']['goal']
-            wakeup_hour = math.floor(wakeup_time)
-            wakeup_min = 60 * (wakeup_time-wakeup_hour)
-            if wakeup_hour <= current_hour:
-                wakeup_hour += 24
-            if wakeup_min <= current_min:
-                wakeup_hour -= 1
-                wakeup_min += 60
-
-            time_diff = (wakeup_hour - current_hour) + ((wakeup_min - current_min) / 60)
-            print(time_diff)
 
         weather_url = 'https://api.openweathermap.org/data/2.5/onecall?lat=' + str(latitude_two_dec) + '&lon=' + str(longitude_two_dec) + '&exclude=daily,current,minutely&appid=' + os.environ.get('OPEN_WEATHER_KEY') + '&units=imperial'
         weather_response = requests.get(weather_url)
         # print(weather_response.json())
         valid_weather_times = weather_parse(weather_response.json())
-        # print(valid_weather_times)
+        print(valid_weather_times)
 
         locations = index_collection.find({'geometry': 
                                 {'$near': 
@@ -130,6 +109,70 @@ def get_recommendations():
     finally:
         return response
 
+@index_api.route('/get-sleep', methods=['GET'])
+def get_sleep():
+    response = []
+    try:
+        args = request.args.to_dict()
+        username = args['username']
+        current_time = datetime.datetime.now()
+        current_hour, current_min = current_time.hour, current_time.minute
+        user = users_collection.find_one({'username': username})
+        if user is None:
+            response = make_response(Response('user not found: ' + username), 401)
+        else:
+            wakeup_time = user['goals']['sleep']['time']
+            sleep_goal = user['goals']['sleep']['goal']
+            goal_hours = math.floor(sleep_goal)
+            goal_min = (sleep_goal - goal_hours) * 60
+            wakeup_hour = math.floor(wakeup_time)
+            wakeup_min = 60 * (wakeup_time-wakeup_hour)
+
+            start_min = wakeup_min - goal_min
+            start_hour = wakeup_hour - goal_hours
+            if start_min < 0:
+                start_min = start_min + 60
+                start_hour -= 1
+            if start_hour < 0:
+                start_hour += 24
+
+            modified_wakeup_hour = wakeup_hour + 24 if wakeup_hour <= current_hour else wakeup_hour
+            modified_wakeup_min = wakeup_min
+            if wakeup_min <= current_min:
+                modified_wakeup_hour -= 1
+                modified_wakeup_min += 60
+
+            time_diff = (modified_wakeup_hour - current_hour) + ((modified_wakeup_min - current_min) / 60)
+            rec = {}
+            if time_diff <= sleep_goal:
+                rec = {
+                    'start_hour': current_hour,
+                    'start_min': current_min,
+                    'end_hour': wakeup_hour,
+                    'end_min': wakeup_min,
+                    'score': (time_diff / sleep_goal) * 100
+                }
+            else:
+                rec = {
+                    'start_hour': start_hour,
+                    'start_min': start_min,
+                    'end_hour': wakeup_hour,
+                    'end_min': wakeup_min,
+                    'score': 100
+                }
+
+            response = make_response(json_util.dumps(rec), 200)
+
+    except KeyError as e:
+        print(e)
+        response = make_response(Response('invalid client request'), 400)
+
+    except Exception as e:
+        response = make_response(Response(e), 500)
+
+    finally:
+        return response
+
 def score(recommendation: Recommendation, min_steps):
     rec_steps = recommendation.get_steps()
     if rec_steps < min_steps:
@@ -142,8 +185,12 @@ def weather_parse(weather_response):
     final_weather_list = []
     previous_valid = -2
     one_complete = False
+    first_hour = datetime.datetime.fromtimestamp(int(weather_response['hourly'][0]['dt'])).hour
+    if first_hour > 0:
+        final_weather_list.append({'start': 0, 'end': first_hour, 'temp': '', 'description': '', 'valid': False})
     for hour in weather_response['hourly']:
         current_hour = datetime.datetime.fromtimestamp(int(hour['dt'])).hour
+
         if current_hour == 0 and one_complete:
             break
         is_valid = True
@@ -152,8 +199,6 @@ def weather_parse(weather_response):
                 if hour['dt'] > alert['start'] and hour['dt'] < alert['end']:
                     is_valid = False
                     break
-        
-        
             
         if is_valid and hour['weather'][0]['id'] // 100 == 8:
             if previous_valid != 1:
