@@ -16,6 +16,7 @@ mccabe==0.6.1
 pylint==2.6.0
 pymongo==3.11.2
 python-dotenv==0.15.0
+pytz==2021.1
 requests==2.25.1
 six==1.15.0
 toml==0.10.2
