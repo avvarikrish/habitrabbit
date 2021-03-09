@@ -35,6 +35,8 @@ import AppleHealthKit from 'rn-apple-healthkit';
 import GoalInput from './GoalInput.js';
 import Recommendation from './Recommendation.js';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
+import openMap from 'react-native-open-maps';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 navigator.geolocation = require('@react-native-community/geolocation');
 const axios = require('axios');
@@ -67,34 +69,35 @@ export class Home extends React.Component {
       refreshing: false,
       location: null,
       weatherIndex: 0,
-    //   places: [],
-      places: [{
-            "latitude": 37.680181, 
-            "longitude": -121.921498, 
-            "frequency": 18, 
-            "steps": 48368.7534, 
-            "address": "7700 Highland Oaks Dr, Pleasanton, CA 94588, USA", 
-            "time": 28080, 
-            "time_str": "7 hours 48 mins"
-        }, 
-        {
-            "latitude": 37.527237, 
-            "longitude": -121.9679, 
-            "frequency": 1, 
-            "steps": 5724.2526, 
-            "address": "4551 Carol Ave, Fremont, CA 94538, USA", 
-            "time": 3254,
-            "time_str": "54 mins"
-        },
-        {
-            "latitude": 37.515014, 
-            "longitude": -121.92916, 
-            "frequency": 1, 
-            "steps": 7253.0821000000005,
-            "address": "44152 Glendora Dr, Fremont, CA 94539, USA", 
-            "time": 4169, 
-            "time_str": "1 hour 9 mins"
-        }],
+      sleepBedtime: false,
+      places: false,
+    //   places: [{
+    //         "latitude": 37.680181, 
+    //         "longitude": -121.921498, 
+    //         "frequency": 18, 
+    //         "steps": 48368.7534, 
+    //         "address": "7700 Highland Oaks Dr, Pleasanton, CA 94588, USA", 
+    //         "time": 28080, 
+    //         "time_str": "7 hours 48 mins"
+    //     }, 
+    //     {
+    //         "latitude": 37.527237, 
+    //         "longitude": -121.9679, 
+    //         "frequency": 1, 
+    //         "steps": 5724.2526, 
+    //         "address": "4551 Carol Ave, Fremont, CA 94538, USA", 
+    //         "time": 3254,
+    //         "time_str": "54 mins"
+    //     },
+    //     {
+    //         "latitude": 37.515014, 
+    //         "longitude": -121.92916, 
+    //         "frequency": 1, 
+    //         "steps": 7253.0821000000005,
+    //         "address": "44152 Glendora Dr, Fremont, CA 94539, USA", 
+    //         "time": 4169, 
+    //         "time_str": "1 hour 9 mins"
+    //     }],
     };
 
     this.modalOpen = this.modalOpen.bind(this);
@@ -112,7 +115,8 @@ export class Home extends React.Component {
     this.weatherWidget = this.weatherWidget.bind(this);
     this.recommendationWidget = this.recommendationWidget.bind(this);
     this.weatherIntervalBar = this.weatherIntervalBar.bind(this);
-    // this.getRecommendations = this.getRecommendations.bind(this);
+    this.getSleep = this.getSleep.bind(this);
+    this.goToLocation = this.goToLocation.bind(this);
   }
 
     modalOpen() {
@@ -219,7 +223,6 @@ export class Home extends React.Component {
                 dict[date] = [{score: response.data[i].cumulative_score, sleep: response.data[i].subscores.sleep.value, sleep_goal: response.data[i].subscores.sleep.goal, steps: response.data[i].subscores.steps.value, steps_goal: response.data[i].subscores.steps.goal}];
               }
               this.setState({items: dict});
-              // this.setState({items: {'2021-02-17': [{name: 'February 17, 2021', score: 44.25, sleep: 7, steps: 100}]}});
               
           }
       }).catch((response) => {
@@ -253,6 +256,7 @@ export class Home extends React.Component {
                     longitude: coords.longitude,
                     latitude: coords.latitude,
                     steps: goal,
+                    username: this.props.username,
                 
                 },
                 headers: {
@@ -261,8 +265,10 @@ export class Home extends React.Component {
                 }
                 })
                 .then((response) => {
+                    console.log("KRISH ASKED ME TO TO DO THIS SO IM PRINTING IT. YESSIR!")
                     this.setState({ places: response.data });
-                    console.log(response);
+                    console.log( this.state.places );
+                    
                 })
                 .catch((error) => {
                     console.log(error);
@@ -273,14 +279,33 @@ export class Home extends React.Component {
           );
     }
 
+    async getSleep() {
+        const url  = "https://botsecure.mangocircle.com:8000/index/get-sleep"
+        axios.get(url, {
+            params: {
+                username: this.props.username,
+            },
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
+            })
+            .then((response) => {
+                this.setState({ sleepBedtime: response.data });
+            })
+            .catch((error) => {
+                console.log(error);
+            })
+    }
+
 
     async componentDidMount() {
         //API calls to data base getting sleep and weights etc.
         await this.getAppleHealthData();
         await this.getDataFromDatabase();
         await this.getAllScores();
-        // await this.getLocation();
-        // await this.getRecommendations();
+        await this.getLocation();
+        await this.getSleep();
 
         console.log(this.state);
     }
@@ -318,7 +343,7 @@ export class Home extends React.Component {
                         steps: this.state.Steps.value,
                     }).then((response) => {
                         // this.setState({ CumulativeScore: response.data.cumulative_score })
-                        console.log(response.data);
+                        // console.log(response.data);
                         this.setState({Sleep: response.data.subscores.sleep.value, SleepWeight: response.data.subscores.sleep.weight, 
                             SleepGoal: response.data.subscores.sleep.goal, StepGoal: response.data.subscores.steps.goal, StepWeight: response.data.subscores.steps.weight,
                             CumulativeScore: response.data.cumulative_score,
@@ -334,10 +359,23 @@ export class Home extends React.Component {
     async refreshScreen() {
         
         await this.inputAppleHealthIntoDatabase();
-        // await this.getLocation();
-        // await this.getRecommendations();
-        console.log(this.state);
+        await this.getLocation();
+        await this.getSleep();
+
     }
+
+    goToLocation(data) {
+
+        axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
+        {
+            latitude: data.latitude,
+            longitude: data.longitude,
+        }).then((response) => {
+            openMap({ end: data.address });
+        }).catch((response) => {
+            console.log(response);
+        })
+      }
 
     todayScoreWidget() {
 
@@ -345,14 +383,15 @@ export class Home extends React.Component {
             <View style={styles.card}>
                 <View style = {styles.todayHeader}>
                     <Text style={styles.todayText}>Today</Text>
-                    {(this.state.CumulativeScore) !== false ?
-                        <Text>Current Score: {this.state.CumulativeScore}</Text>
-                    : []
-                    }
                 </View>
                 <View style = {styles.container}>
-                    
-                    
+                {(this.state.CumulativeScore) !== false ?
+                        <View style={styles.scoreHeader}>
+                            <Text style = {styles.scoreText}>Score: </Text>
+                            <Text style={styles.scoreValue}>{this.state.CumulativeScore.toFixed(2)}</Text>
+                        </View>
+                    : []
+                    }
                     <View style={styles.body}>
                         <View style={styles.sectionContainer}>
                             {(this.state.Steps === 0 || this.state.Steps) ?
@@ -400,125 +439,115 @@ export class Home extends React.Component {
         const denominator = 4.16;
         let percent_width;
         const percent_height = 20;
-        const entries = [{"start": 0, "end": 2, "description": false},{"start": 2, "end": 4, "temp": 50.67, "description": "Clear"}, {"start": 4, "end": 8, "description": false}, {"start": 8, "end": 24,
-        "temp": 40.35356933593749, "description": "Clouds"}];
-        return entries.map(data => {
-            percent_width = (data.end - data.start) * denominator;
-            const [open, setOpen] = useState(false);
-            var str_width = percent_width.toString() + "%";
-            
-            if (data.description){
-                let style_color;
-                let start;
-                let color;
-                let end;
-                if (data.start === 12){
-                    start = "12 P.M.";
-                } 
-                else if (data.start > 12){
-                    start = (data.start - 12).toString() + " P.M.";
-                }
-                else{
-                    start = (data.start).toString() + " A.M.";
-                }
+        
+        if (this.state.places !== false){
+            return this.state.places[0].valid_weather_times.map(data => {
+                percent_width = (data.end - data.start) * denominator;
+                const [open, setOpen] = useState(false);
+                var str_width = percent_width.toString() + "%";
+                
+                if (data.description){
+                    let style_color;
+                    let start;
+                    let color;
+                    let end;
+                    if (data.start === 12){
+                        start = "12 P.M.";
+                    } 
+                    else if (data.start > 12){
+                        start = (data.start - 12).toString() + " P.M.";
+                    }
+                    else{
+                        start = (data.start).toString() + " A.M.";
+                    }
 
-                if (data.end === 12){
-                    end = "12 P.M.";
-                } 
-                else if (data.end === 24){
-                    end = "Midnight"
-                }
-                else if (data.end > 12){
-                    end = (data.end - 12).toString() + " P.M.";
-                }
-                else{
-                    end = (data.end).toString() + " A.M.";
-                }
+                    if (data.end === 12){
+                        end = "12 P.M.";
+                    } 
+                    else if (data.end === 24){
+                        end = "Midnight"
+                    }
+                    else if (data.end > 12){
+                        end = (data.end - 12).toString() + " P.M.";
+                    }
+                    else{
+                        end = (data.end).toString() + " A.M.";
+                    }
 
-                if (data.description == "Clear"){
-                    style_color = styles.weatherWidgetPopupClear;
-                    color = "#ffd571";
-                }
-                else {
-                    style_color = styles.weatherWidgetPopupClouds;
-                    // color = "#d3d3d3";
-                    color = "#ffd571";
-                }
-                return(
-                    <TouchableOpacity key = {data.start} onPress = {() => setOpen(true)}  style={{width: str_width, height: percent_height, backgroundColor: color, borderRadius: 2}}>
-                    
-                        <Dialog
-                            width = {0.9}
-                            height = {.2}
-                            visible={open}
-                            onTouchOutside={() => setOpen(false)}
-                        >
-                            <View style = {style_color}>
-                                <Text style={styles.weatherWidgetTitle}>{start} - {end}</Text>
-                                <View>
-                                    <Text style = {styles.weatherTempNumberText}>{data.description} {Math.round(data.temp)}°</Text>
+                    if (data.description == "Clear"){
+                        style_color = styles.weatherWidgetPopupClear;
+                        color = "#ffd571";
+                    }
+                    else {
+                        style_color = styles.weatherWidgetPopupClouds;
+                        // color = "#d3d3d3";
+                        color = "#ffd571";
+                    }
+                    return(
+                        <TouchableOpacity key = {data.start} onPress = {() => setOpen(true)}  style={{width: str_width, height: percent_height, backgroundColor: color, borderRadius: 2}}>
+                        
+                            <Dialog
+                                width = {0.9}
+                                height = {.2}
+                                visible={open}
+                                onTouchOutside={() => setOpen(false)}
+                            >
+                                <View style = {style_color}>
+                                    <Text style={styles.weatherWidgetTitle}>{start} - {end}</Text>
+                                    <View>
+                                        <Text style = {styles.weatherTempNumberText}>{data.description} {Math.round(data.temp)}°</Text>
+                                    </View>
+                                    
                                 </View>
-                                {/* <View style={styles.cardBottom}>
-                                    <View style={styles.weatherTempNumber}>
-                                        <Text style = {styles.weatherTempNumberText}>{Math.round(data.temp)}°</Text>
-                                    </View>
-                                    <View style={styles.weatherTempString}>
-                                        <Text style = {styles.weatherTempStringText}>{data.description}</Text>
-                                    </View>
-                                </View> */}
-                                
-                            </View>
-                        </Dialog>
-                    </TouchableOpacity>
-                );
-            }
-            else{
-                return(
-                    <View key = {data.start} style={{width: str_width, height: percent_height, backgroundColor: "#b5b5b5", borderRadius: 2}} />
-                );
-            }
-        });
+                            </Dialog>
+                        </TouchableOpacity>
+                    );
+                }
+                else{
+                    return(
+                        <View key = {data.start} style={{width: str_width, height: percent_height, backgroundColor: "#b5b5b5", borderRadius: 2}} />
+                    );
+                }
+            });
+        }
+        else{
+            return (
+                <View></View>
+            );
+        }
     }
 
     weatherWidget() {
-        
+        console.log(this.state.places);
 
         return (
             <View style={styles.walkCardContainer}>
-                
-                {/* <View style={styles.cardBottom}>
-                    <View style={styles.weatherTempNumber}>
-                        <Text style = {styles.weatherTempNumberText}>91°</Text>
-                    </View>
-                    <View style={styles.weatherTempString}>
-                        <Text style = {styles.weatherTempStringText}>Sunny</Text>
-                    </View>
-                </View> */}
-                
+
                 <View style = {styles.todayHeader}>
                     <View style={{alignItems: "center"}}>
                         <Text style={styles.todayText}>Recommended Walk</Text>
                     </View>
-                    {/* <View style={{flex: 1, flexDirection: "row", justifyContent: "flex-end", marginRight: 10}}>
-                        <Text style={{fontSize: 20}}>></Text>
-                    </View> */}
                     
                 </View>
-                <TouchableOpacity style ={styles.weatherCardCenter}>
-                        {/* <Text style = {styles.cardTextHeader}>Address: </Text> */}
-                    <View>
-                        <Text style = {styles.cardText}>7700 Highland Oaks Dr, Pleasanton, CA 94588, USA</Text>
-                    </View>
-                    
-                    <View style={styles.cardBottom}>
-                        <View style={styles.cardBottomItem1}>
-                            <Text style = {styles.cardText}>Steps: 1000</Text>
+
+                {(this.state.places !== false) ?
+                    <TouchableOpacity style ={styles.weatherCardCenter} onPress={() => this.goToLocation(this.state.places[0])}>
+                        <View>
+                            <Text style = {styles.cardText}>{this.state.places[0].address}</Text>
                         </View>
-                        <View style={styles.cardBottomItem2}>
-                            <Text style = {styles.cardText}>Time: 10 minutes</Text>
+                        
+                        <View style={styles.cardBottom}>
+                            <View style={styles.cardBottomItem1}>
+                                <Text style = {styles.cardText}>Steps: {Math.floor(this.state.places[0].steps)}</Text>
+                            </View>
+                            <View style={styles.cardBottomItem2}>
+                                <Text style = {styles.cardText}>Time: {this.state.places[0].time_str}</Text>
+                            </View>
                         </View>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity> : []
+                
+                }
+                
                 <View style= {styles.weatherForecast}>
                     <Text style={styles.weatherForcastTitle}>Forecast</Text>
                 </View>
@@ -530,48 +559,85 @@ export class Home extends React.Component {
                         <Text style = {styles.weatherHourEnd}>12 A.M.</Text>
                     </View>
                 </View>
-                <View style={{flex: 1, flexDirection: 'row', width: "90%", backgroundColor: "#c7f5ff"}}>
-                    {this.weatherIntervalBar()}
-                </View>
-                {/* <TouchableOpacity style={{width: "95%", height: 30, justifyContent: "center", backgroundColor: "#c7f5ff", alignItems: "center", flex: 1, borderRadius: 10, marginTop: "5%"}}>
-                    <Text>GO!</Text>
-                </TouchableOpacity> */}
+
+                {(this.state.places !== false) ?
+                    <View style={{flex: 1, flexDirection: 'row', width: "90%", backgroundColor: "#c7f5ff"}}>
+                        {this.weatherIntervalBar()}
+                    </View> : []
+                }
             </View>
 
         );
     }
 
     recommendationWidget() {
+
+        let hour_first;
+        let hour_second;
+        let minute_first;
+        let minute_second;
+        let time_of_day;
+
+        if (this.state.sleepBedtime !== false){
+            if (this.state.sleepBedtime.start_hour < 10){
+                hour_first = 0;
+                hour_second = this.state.sleepBedtime.start_hour;
+            }
+            else{
+                hour_first = Math.floor(this.state.sleepBedtime.start_hour/10);
+                hour_second = this.state.sleepBedtime.start_hour%10;
+            }
+
+
+
+            if (this.state.sleepBedtime.start_minute < 10){
+                minute_first = 0;
+                minute_second = this.state.sleepBedtime.start_min;
+            }
+            else{
+                minute_first = Math.floor(this.state.sleepBedtime.start_min/10);
+                minute_second = this.state.sleepBedtime.start_min%10;
+            }
+
+            if (this.state.sleepBedtime.start_hour >= 12){
+                time_of_day = "P.M.";
+            }
+            else{
+                time_of_day = "A.M.";
+            }
+        }
+
+
         return (
             <View style={styles.cardCenter}>
                 <View style = {styles.todayHeader}>
                     <Text style={styles.todayText}>Recommended Sleep</Text>
                 </View>
-                <View style={{flex: 1, flexDirection: 'row', marginTop: "5%"}}>
-                    {/* <View style={{width: "30%", height: 50, marginRight: "1%", alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>Bedtime:</Text>
-                    </View> */}
-                    
-                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>1</Text>
-                    </View>
-                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>1</Text>
-                    </View>
-                    <View style={{width: "2%", height: 50, marginRight: "1%", alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>:</Text>
-                    </View>
-                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>0</Text>
-                    </View>
-                    <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>0</Text>
-                    </View>
-                    <View style={{width: "10%", height: 50, alignItems: "center", justifyContent: "center"}}>
-                        <Text style = {styles.weatherForcastTitle}>P.M.</Text>
-                    </View>
+                {(this.state.sleepBedtime !== false) ?
+                    <View style={{flex: 1, flexDirection: 'row', marginTop: "5%"}}>
 
-                </View>
+                        <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>{hour_first}</Text>
+                        </View>
+                        <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>{hour_second}</Text>
+                        </View>
+                        <View style={{width: "2%", height: 50, marginRight: "1%", alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>:</Text>
+                        </View>
+                        <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>{minute_first}</Text>
+                        </View>
+                        <View style={{width: "10%", height: 50, marginRight: "1%", backgroundColor: '#e6e6e6', alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>{minute_second}</Text>
+                        </View>
+                        <View style={{width: "10%", height: 50, alignItems: "center", justifyContent: "center"}}>
+                            <Text style = {styles.weatherForcastTitle}>{time_of_day}</Text>
+                        </View>
+
+                    </View> : []
+             }
+                
             </View>
         );
     }
@@ -748,10 +814,37 @@ export class Home extends React.Component {
 
   render() {
     return (
-        <Tab.Navigator>
+        <Tab.Navigator
+        screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+  
+              if (route.name === 'Home') {
+                iconName = "menu";
+              } else if (route.name === 'Input') {
+                iconName = "add-circle";
+              }
+              else if (route.name === "Navigate"){
+                iconName = "navigate";
+              }
+              else if (route.name === "Calendar"){
+                iconName = "calendar";
+              }
+  
+              // You can return any component that you like here!
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}
+          tabBarOptions={{
+            activeTintColor: 'tomato',
+            inactiveTintColor: 'gray',
+          }}
+        
+        
+        >
           <Tab.Screen name="Home" component={this.HomeScreen.bind(this)} options = {{headerShown: false}}/>
           <Tab.Screen name="Input" component={this.InputScreen.bind(this)} options = {{headerShown: false}}/>
-          <Tab.Screen name="Recommendation" component={this.RecommendationScreen.bind(this)} options = {{headerShown: false}}/>
+          <Tab.Screen name="Navigate" component={this.RecommendationScreen.bind(this)} options = {{headerShown: false}}/>
           <Tab.Screen name="Calendar" component={this.CalendarScreen.bind(this)} />
         </Tab.Navigator>  
       );
@@ -760,6 +853,11 @@ export class Home extends React.Component {
 
 const styles = StyleSheet.create({
 
+    scoreValue: {
+        fontSize: 40, 
+        fontFamily: 'Avenir-Light', 
+        color: "#00adf5",
+    },
     weatherForecast: {
         paddingTop: "5%",
         // backgroundColor: "#c7f5ff",
@@ -980,6 +1078,20 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingBottom: 10,
         paddingTop: 10
+    },
+    scoreHeader: {
+        width: "100%",
+        textAlign: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: "5%",
+        flex: 1,
+        flexDirection: "row",
+    },
+    scoreText: {
+        fontFamily: "Avenir-Light",
+        fontSize: 20,
+        // color: "white"
     },
     container: {
         flex: 1,
