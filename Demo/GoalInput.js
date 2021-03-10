@@ -61,6 +61,8 @@ export class GoalInput extends React.Component {
                 "sleep": {
                     "goal": parseInt(this.state.SleepGoalInput, 10),
                     "weight": 0.5,
+                    "time": this.state.Date.getHours() + this.state.Date.getMinutes()/60,
+        
                 },
                 "steps": {
                     "goal": parseInt(this.state.StepGoalInput, 10),
@@ -89,13 +91,15 @@ export class GoalInput extends React.Component {
                     style={styles.scrollView}
                 >
                     <View style = {styles.todayHeader}>
-                        <Text style={styles.todayText}>Input</Text>
-
-                        <Text style={styles.subTitle}>Sleep:</Text>
+                        <View style= {{backgroundColor: "#024878", width: "95%", alignItems: "center", paddingTop: "2%", paddingBottom: "2%", borderRadius: 10,}}>
+                            <Text style={styles.todayText}>Input</Text>
+                        </View>
+                        <View style= {{flex: 1, flexDirection: "row"}}>
+                        <Text style={styles.subTitle}>Amount Slept:</Text>
 
                             <Picker
                             selectedValue={this.state.SleepInput}
-                            style={{height: "30%", width: 100, paddingBottom: "50%"}}
+                            style={{height: "30%", width: 100,}}
                             onValueChange={(itemValue, itemIndex) => this.setState({SleepInput: itemValue})}
                             >
                                 <Picker.Item label="0" value= "0" />
@@ -124,7 +128,8 @@ export class GoalInput extends React.Component {
                                 <Picker.Item label="23" value= "23" />
                                 <Picker.Item label="24" value= "24" />
                             </Picker>
-                        <View style = {{flexDirection: "row", marginTop: 10}}>
+                        </View>
+                        <View style = {{flexDirection: "row"}}>
                             <Text style ={{fontSize: 20, marginRight: 10, fontFamily: "Avenir-Light",}}>
                                 Sleep Goal Input:
                             </Text>
@@ -137,7 +142,7 @@ export class GoalInput extends React.Component {
                                 onChangeText={(text) => this.setState({SleepGoalInput: text})}
                             />
                         </View>
-                        <View style = {{flexDirection: "row", marginTop: 50}}>
+                        <View style = {{flexDirection: "row", marginTop: 20}}>
                             <Text style ={{fontSize: 20, marginRight: 20, fontFamily: "Avenir-Light",}}>
                                 Step Goal Input:
                             </Text>
@@ -189,12 +194,11 @@ const styles = StyleSheet.create({
         height: "8%",
         backgroundColor: "#024878",
         borderRadius: 10,
-        marginTop: 60,
     },
     subTitle: {
         fontFamily: "Avenir-Light",
         fontSize: 20,
-        marginTop: "10%",
+        marginTop: "22%",
     },
     goalInput: {
         position: "relative",
@@ -250,12 +254,13 @@ const styles = StyleSheet.create({
     todayText: {
         fontFamily: "Avenir-Light",
         fontSize: 30,
+        color: "white"
     },
     todayHeader: {
         textAlign: "center",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: "3%",
+        marginTop: "5%",
     },
     container: {
         flex: 1,

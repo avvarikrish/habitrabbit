@@ -25,34 +25,6 @@ export class Recommendation extends React.Component {
       super(props);
       this.state = {
             location: null,
-            // places: [{
-            //     "latitude": 37.680181, 
-            //     "longitude": -121.921498, 
-            //     "frequency": 18, 
-            //     "steps": 48368.7534, 
-            //     "address": "7700 Highland Oaks Dr, Pleasanton, CA 94588, USA", 
-            //     "time": 28080, 
-            //     "time_str": "7 hours 48 mins"
-            // }, 
-            // {
-            //     "latitude": 37.527237, 
-            //     "longitude": -121.9679, 
-            //     "frequency": 1, 
-            //     "steps": 5724.2526, 
-            //     "address": "4551 Carol Ave, Fremont, CA 94538, USA", 
-            //     "time": 3254,
-            //     "time_str": "54 mins"
-            // },
-            // {
-            //     "latitude": 37.515014, 
-            //     "longitude": -121.92916, 
-            //     "frequency": 1, 
-            //     "steps": 7253.0821000000005,
-            //     "address": "44152 Glendora Dr, Fremont, CA 94539, USA", 
-            //     "time": 4169, 
-            //     "time_str": "1 hour 9 mins"
-            // }],
-            // places: [],
         },
 
         this.showRecommendations = this.showRecommendations.bind(this);
@@ -60,40 +32,8 @@ export class Recommendation extends React.Component {
         this.showRecommendations2 = this.showRecommendations2.bind(this);
     }
 
-    componentDidMount() {
-        //get current location first, then do the API call
-        console.log(this.props);
-
-
-        // // if (this.props)
-        // const url = "https://botsecure.mangocircle.com:8000/index/get-locations";
-        // axios.get(url, {
-        // params: {
-        //     longitude: this.props.longitude,
-        //     latitude: this.props.latitude,
-        //     steps: 1000,
-        
-        // },
-        // headers: {
-        //     Accept: 'application/json',
-        //     'Content-Type': 'application/json'
-        // }
-        // })
-        // .then((response) => {
-        //     this.setState({ places: response.data });
-        //     console.log(response);
-        // })
-        // .catch((error) => {
-        //     console.log(error);
-        // })
-    }
-
     goToLocation(data) {
-        // console.log(lat, long);
-        // openMap({ latitude: 37.865101, longitude: -119.538330 });
-        // openMap({ latitude: lat, longitude: long });
 
-        // var coords = JSON.parse(this.state.location).coords;
         axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
         {
             latitude: data.latitude,
@@ -104,7 +44,6 @@ export class Recommendation extends React.Component {
         }).catch((response) => {
             console.log(response);
         })
-        // openMap({ end: data.address });
       }
 
     showRecommendations() {
@@ -112,7 +51,6 @@ export class Recommendation extends React.Component {
             return(
                 <TouchableOpacity key = {data.address} style = {styles.card} onPress={() => this.goToLocation(data)}>
                     <View style ={{paddingBottom: "2%"}}>
-                        {/* <Text style = {styles.cardTextHeader}>Address: </Text> */}
                         <Text style = {styles.cardTextHeader}>{data.address}</Text>
                     </View>
                     <View style={styles.cardBottom}>
@@ -123,9 +61,6 @@ export class Recommendation extends React.Component {
                             <Text style = {styles.cardText}>Time: {data.time_str}</Text>
                         </View>
                     </View>
-                    {/* <View style={{width: "100%", height: "1%", justifyContent: "center", alignItems: "center", marginTop: "5%"}}>
-                        <View style={{backgroundColor: "black", width: "50%", paddingTop: ".5%",}}></View>
-                    </View> */}
                 </TouchableOpacity>
             )
         });
@@ -136,7 +71,6 @@ export class Recommendation extends React.Component {
             return(
                 <TouchableOpacity key = {data.address} style = {styles.card2} onPress={() => this.goToLocation(data)}>
                     <View style ={{paddingBottom: "2%"}}>
-                        {/* <Text style = {styles.cardTextHeader}>Address: </Text> */}
                         <Text style = {styles.cardTextHeader}>{data.address}</Text>
                     </View>
                     <View style={styles.cardBottom2}>
@@ -164,16 +98,7 @@ export class Recommendation extends React.Component {
                         <View style={styles.title}>
                             <Text style={styles.todayText}>Recommendations</Text>
                         </View>
-                        {/* <TouchableOpacity
-                            onPress = {this.getLocation}
-                        >
-                            <Text>
-                                Hello
-                            </Text>
-                        </TouchableOpacity> */}
                         {this.showRecommendations()}
-                        
-                        {/* {this.showRecommendations2()} */}
                     </View>
                 </ScrollView>
                 </SafeAreaView>
