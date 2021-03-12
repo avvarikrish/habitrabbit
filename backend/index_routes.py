@@ -33,7 +33,6 @@ def add_location():
         location = request.json
         longitude = truncate(location['longitude'], PRECISION)
         latitude = truncate(location['latitude'], PRECISION)
-        print(longitude, latitude)
         index_collection.update_one({'longitude': longitude, 'latitude': latitude},
                                     {'$setOnInsert': index_bson(longitude, latitude), '$inc': {'properties.frequency': 1}},
                                     upsert=True)
@@ -173,14 +172,11 @@ def get_locations():
                 del recommendations[rec]
 
             last_week_score = avg_steps/avg_steps_goal
-            print(last_week_score)
             add_steps = 0
             if last_week_score < STEPS_THRESHOLD:
-                print((avg_steps_goal * STEPS_THRESHOLD) - avg_steps)
                 add_steps = (avg_steps_goal * STEPS_THRESHOLD) - avg_steps
             sorted_recommendations = sorted(recommendations, key=lambda rec: score(rec, steps, add_steps), reverse=True)
-            for rec in sorted_recommendations:
-                print(score(rec, steps, add_steps), rec.get_steps())
+
             for recommendation in sorted_recommendations:
                 final_recommendations.append(recommendation.to_json())
 
@@ -208,7 +204,6 @@ def get_sleep():
         username = args['username']
         tz = pytz.timezone('America/Los_Angeles')
         current_time = datetime.datetime.fromtimestamp(time.time(), tz)
-        # current_time = datetime.datetime.now()
         current_hour, current_min = current_time.hour, current_time.minute
         user = users_collection.find_one({'username': username})
         if user is None:
@@ -283,15 +278,16 @@ def weather_parse(weather_response, sleep_hour, wakeup_hour):
     current_time = datetime.datetime.now().hour
     if sleep_hour < current_time:
         sleep_hour += 24
+
     tz = pytz.timezone('America/Los_Angeles')
     first_hour = datetime.datetime.fromtimestamp(int(weather_response['hourly'][0]['dt']), tz).hour
     begin_hour = max(first_hour, wakeup_hour) if first_hour > 0 else wakeup_hour
     if begin_hour > 0:
-        final_weather_list.append({'start': 0, 'end': begin_hour, 'temp': '', 'description': '', 'valid': False})
+        final_weather_list.append({'start': 0, 'end': current_time, 'temp': '', 'description': '', 'valid': False})
 
     for hour in weather_response['hourly']:
         current_hour = datetime.datetime.fromtimestamp(int(hour['dt']), tz).hour
-        is_valid = True if current_hour < sleep_hour else False
+        is_valid = True if current_hour < sleep_hour and current_hour >= begin_hour else False
 
         # stop at 0 hour
         if current_hour == 0 and one_complete:

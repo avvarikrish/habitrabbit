@@ -38,12 +38,13 @@ def login_user():
         result = users_collection.find_one(
             {'username': auth_info['username']}
         )
+        print(result)
 
         if result == None:
             response = make_response(Response('user not found: ' + auth_info['username'], 401))
-
-        if result['password'] != auth_info['password']:
-            response = make_response(Response('incorrect password: ' + auth_info['password'], 401))
+        else:
+            if result['password'] != auth_info['password']:
+                response = make_response(Response('incorrect password: ' + auth_info['password'], 401))
 
     except KeyError:
         response = make_response(Response('invalid client request', 400))
