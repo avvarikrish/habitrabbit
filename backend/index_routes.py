@@ -275,11 +275,12 @@ def weather_parse(weather_response, sleep_hour, wakeup_hour):
     final_weather_list = []
     previous_valid = -2
     one_complete = False
-    current_time = datetime.datetime.now().hour
-    if sleep_hour < current_time:
-        sleep_hour += 24
+    # current_time = datetime.datetime.now().hour
+    # if sleep_hour < current_time:
+    #     sleep_hour += 24
 
     tz = pytz.timezone('America/Los_Angeles')
+    current_time = datetime.datetime.now(tz).hour
     first_hour = datetime.datetime.fromtimestamp(int(weather_response['hourly'][0]['dt']), tz).hour
     begin_hour = max(first_hour, wakeup_hour) if first_hour > 0 else wakeup_hour
     if begin_hour > 0:
