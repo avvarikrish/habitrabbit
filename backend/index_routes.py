@@ -107,6 +107,7 @@ def get_locations():
             for avg_score in last_week_scores:
                 avg_steps = avg_score['value']
                 avg_steps_goal = avg_score['goal']
+            print("GOAL", avg_steps_goal)
             last_week_score = avg_steps/avg_steps_goal
             add_steps = 0
             if last_week_score < STEPS_THRESHOLD:
@@ -181,6 +182,7 @@ def get_locations():
         response = make_response(Response('invalid client request'), 400)
 
     except Exception as e:
+        print(e)
         response = make_response(Response(e), 500)
 
     finally:
@@ -253,6 +255,7 @@ def get_sleep():
         response = make_response(Response('invalid client request'), 400)
 
     except Exception as e:
+        print(e)
         response = make_response(Response(e), 500)
 
     finally:
@@ -264,7 +267,7 @@ def score(recommendation: Recommendation, min_steps, add_steps):
     rec_steps = recommendation.get_steps()
 
     # valid times of good weather
-    valid_time_ranges = recommendation.get_valid_weather_hours() / (recommendation.get_time() / 3600)
+    valid_time_ranges = recommendation.get_valid_weather_hours() / 2
 
     # location frequency
     frequency = recommendation.get_frequency()
