@@ -13,8 +13,8 @@ import {
     Modal,
   } from 'react-native';
 
+// library that opens up Apple Maps / Google Maps
 import openMap from 'react-native-open-maps';
-// import Geolocation from 'react-native-geolocation-service';
 
 const axios = require('axios');
 navigator.geolocation = require('@react-native-community/geolocation');
@@ -29,10 +29,12 @@ export class Recommendation extends React.Component {
 
         this.showRecommendations = this.showRecommendations.bind(this);
         this.goToLocation = this.goToLocation.bind(this);
-        this.showRecommendations2 = this.showRecommendations2.bind(this);
     }
 
     goToLocation(data) {
+
+        // function that takes a location and opens up the location in the user's
+        // map app, and adds to the frequency in the database.
 
         axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
         {
@@ -47,6 +49,10 @@ export class Recommendation extends React.Component {
       }
 
     showRecommendations() {
+
+        // function that returns the array of loction cards that the user can click and
+        // open in their map app.
+
         return this.props.places.map(data => {
             return(
                 <TouchableOpacity key = {data.address} style = {styles.card} onPress={() => this.goToLocation(data)}>
@@ -66,27 +72,11 @@ export class Recommendation extends React.Component {
         });
     }
 
-    showRecommendations2() {
-        return this.props.places.map(data => {
-            return(
-                <TouchableOpacity key = {data.address} style = {styles.card2} onPress={() => this.goToLocation(data)}>
-                    <View style ={{paddingBottom: "2%"}}>
-                        <Text style = {styles.cardTextHeader}>{data.address}</Text>
-                    </View>
-                    <View style={styles.cardBottom2}>
-                        <View style={styles.cardBottomItem1}>
-                            <Text style = {styles.cardText}>Steps: {Math.round(data.steps)}</Text>
-                        </View>
-                        <View style={styles.cardBottomItem2}>
-                            <Text style = {styles.cardText}>Time: {data.time_str}</Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            )
-        });
-    }
-
     render() {
+
+        // render function that renders the recommendation screen, displaying a list
+        // of recommended location to walk to.
+
         return (
             <View style = {{height: '100%'}}>
                 <StatusBar barStyle="dark-content" />

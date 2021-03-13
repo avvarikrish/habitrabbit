@@ -42,11 +42,10 @@ export class App extends React.Component {
       Height: false,
       DateOfBirth: false,
       Steps: false,
-      items: {'2021-01-20': [{name: 'test'}]},
+      items: {},
       userToken: false,
       username: "",
       password: "",
-      text: "asdfasdf",
 
     };
     this.loginHandler = this.loginHandler.bind(this);
@@ -54,7 +53,10 @@ export class App extends React.Component {
   }
 
   loginHandler(username, password) {
-    // fetch("http://127.0.0.1:5000/users/login-user", 
+
+    // function that takes in a username and password to authenticate a login
+
+    // API call to login the user
     fetch("https://botsecure.mangocircle.com:8000/users/login-user",
     {
       method: "POST",
@@ -83,7 +85,11 @@ export class App extends React.Component {
   }
 
   signupHandler(username, first_name, last_name, password){
-    // fetch("http://127.0.0.1:5000/users/create-user", 
+
+    // function that takes in username, first name, last name, and password to 
+    // create a user
+
+    // API call to create a user
     fetch("https://botsecure.mangocircle.com:8000/users/create-user",
     {
       method: "POST",
@@ -113,12 +119,19 @@ export class App extends React.Component {
   }
 
   SignIn() {
+
+    // function that returns the login screen
+
     return(
       <Login loginHandler = {this.loginHandler} signupHandler = {this.signupHandler}/>
     );
   }
 
   MainPage() {
+
+    // function that returns the home screen, passing in the username
+    //  to retrieve data later
+
     return(
       <Home username = {this.state.username}/>
     );

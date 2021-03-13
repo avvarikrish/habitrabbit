@@ -30,6 +30,8 @@ export class GoalInput extends React.Component {
     this.state = {
         SleepInput: "7",
         SleepGoalInput: "8",
+        SleepWeight: ".5",
+        StepWeight: ".5",
         StepGoalInput: "10000",
         Date: new Date(),
         };
@@ -39,7 +41,10 @@ export class GoalInput extends React.Component {
     }
 
     scoreAndGoalInput() {
-        // const url_add = "http://127.0.0.1:5000/scores/add-score";
+
+        // function that does an API call with the submit button press, updating the score goals and
+        // desired wake up time.
+
         const url_add = "https://botsecure.mangocircle.com:8000/scores/add-score";
         axios.post(url_add, {
             username: this.props.username,
@@ -51,22 +56,18 @@ export class GoalInput extends React.Component {
             console.log(response);
         })
 
-        // const url_goal = "http://127.0.0.1:5000/scores/update-goals";
-
-
-        // add what time they want to wake up everyday
         const url_goal = "https://botsecure.mangocircle.com:8000/scores/update-goals";
         const goal = 
             {
                 "sleep": {
                     "goal": parseInt(this.state.SleepGoalInput, 10),
-                    "weight": 0.5,
+                    "weight": parseFloat(this.state.SleepWeight),
                     "time": this.state.Date.getHours() + this.state.Date.getMinutes()/60,
         
                 },
                 "steps": {
                     "goal": parseInt(this.state.StepGoalInput, 10),
-                    "weight": 0.5,
+                    "weight": parseFloat(this.state.StepWeight),
                 }
             }
         axios.post(url_goal, {
@@ -82,6 +83,10 @@ export class GoalInput extends React.Component {
 
 
     render() {
+
+        // render function that renders the input screen, allowing the user to input sleep and step goals,
+        // sleep and step weights, amount slept, and wake up time.
+
         return(
             <View style = {{height: '100%'}}>
                 <StatusBar barStyle="dark-content" />
@@ -91,8 +96,65 @@ export class GoalInput extends React.Component {
                     style={styles.scrollView}
                 >
                     <View style = {styles.todayHeader}>
-                        <View style= {{backgroundColor: "#024878", width: "95%", alignItems: "center", paddingTop: "2%", paddingBottom: "2%", borderRadius: 10,}}>
+                        <View style= {{backgroundColor: "#024878", width: "95%", alignItems: "center", paddingTop: ".5%", paddingBottom: ".5%", borderRadius: 10,}}>
                             <Text style={styles.todayText}>Input</Text>
+                        </View>
+                        <View style={{width: "70%", alignItems: "center", borderRadius: 10, marginTop: 10, marginBottom: 10}}>
+                            <Text style={styles.header1}>Steps</Text>
+                        </View>
+                        
+                        <View style = {{flexDirection: "row"}}>
+                            <Text style ={{fontSize: 20, marginRight: 10, fontFamily: "Avenir-Light",}}>
+                                Goal:
+                            </Text>
+                            <TextInput
+                                autoCaptialize = {"none"}
+                                style = {styles.goalInput}
+                                placeholder=""
+                                textAlign={'center'}
+                                value={this.state.StepGoalInput}
+                                onChangeText={(text) => this.setState({StepGoalInput: text})}
+                            />
+                            <Text style ={{fontSize: 20, marginLeft: 10, marginRight: 10, fontFamily: "Avenir-Light",}}>
+                               Weight:
+                            </Text>
+                            <TextInput
+                                autoCaptialize = {"none"}
+                                style = {styles.goalInput}
+                                placeholder=""
+                                textAlign={'center'}
+                                value={this.state.StepWeight}
+                                onChangeText={(text) => this.setState({StepWeight: text})}
+                            />
+                        </View>
+                        <View style={{width: "70%", alignItems: "center", borderRadius: 10, marginTop: 15, marginBottom: 10}}>
+                            <Text style={styles.header1}>Sleep</Text>
+                        </View>
+                        
+                        
+                        <View style = {{flexDirection: "row"}}>
+                            <Text style ={{fontSize: 20, marginRight: 10, fontFamily: "Avenir-Light",}}>
+                                Goal:
+                            </Text>
+                            <TextInput
+                                autoCaptialize = {"none"}
+                                style = {styles.goalInput}
+                                placeholder=""
+                                textAlign={'center'}
+                                value={this.state.SleepGoalInput}
+                                onChangeText={(text) => this.setState({SleepGoalInput: text})}
+                            />
+                            <Text style ={{fontSize: 20, marginLeft: 10, marginRight: 10, fontFamily: "Avenir-Light",}}>
+                                Weight:
+                            </Text>
+                            <TextInput
+                                autoCaptialize = {"none"}
+                                style = {styles.goalInput}
+                                placeholder=""
+                                textAlign={'center'}
+                                value={this.state.SleepWeight}
+                                onChangeText={(text) => this.setState({SleepWeight: text})}
+                            />
                         </View>
                         <View style= {{flex: 1, flexDirection: "row"}}>
                         <Text style={styles.subTitle}>Amount Slept:</Text>
@@ -129,33 +191,7 @@ export class GoalInput extends React.Component {
                                 <Picker.Item label="24" value= "24" />
                             </Picker>
                         </View>
-                        <View style = {{flexDirection: "row"}}>
-                            <Text style ={{fontSize: 20, marginRight: 10, fontFamily: "Avenir-Light",}}>
-                                Sleep Goal Input:
-                            </Text>
-                            <TextInput
-                                autoCaptialize = {"none"}
-                                style = {styles.goalInput}
-                                placeholder=""
-                                textAlign={'center'}
-                                value={this.state.SleepGoalInput}
-                                onChangeText={(text) => this.setState({SleepGoalInput: text})}
-                            />
-                        </View>
-                        <View style = {{flexDirection: "row", marginTop: 20}}>
-                            <Text style ={{fontSize: 20, marginRight: 20, fontFamily: "Avenir-Light",}}>
-                                Step Goal Input:
-                            </Text>
-                            <TextInput
-                                autoCaptialize = {"none"}
-                                style = {styles.goalInput}
-                                placeholder=""
-                                textAlign={'center'}
-                                value={this.state.StepGoalInput}
-                                onChangeText={(text) => this.setState({StepGoalInput: text})}
-                            />
-                        </View>
-                        <View style={{marginTop: "5%"}}>
+                        <View style={{}}>
                             <Text style = {{fontSize: 20, fontFamily: "Avenir-Light",}}>Wake Up Time:</Text>
                         </View>
                         <DatePicker
@@ -163,6 +199,8 @@ export class GoalInput extends React.Component {
                             date={this.state.Date}
                             onDateChange={(day) => this.setState({ Date: day })}
                         />
+
+                        
                         <TouchableOpacity
                             style = {styles.signinButton}
                             onPress = {this.scoreAndGoalInput}
@@ -182,18 +220,27 @@ export class GoalInput extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    header1: {
+        fontFamily: "Avenir-Light",
+        fontSize: 23,
+        // fontWeight: "bold"
+        // marginTop: 10,
+        // marginBottom: 10,
+    },
     signinText: {
         textAlign: "center",
         color: "white",
         fontFamily: "Avenir-Light",
-        fontSize: 17,
+        fontSize: 20,
     },
     signinButton: {
         justifyContent: "center",
-        width: "70%",
-        height: "8%",
-        backgroundColor: "#024878",
-        borderRadius: 10,
+        width: "60%",
+        height: "6%",
+        // backgroundColor: "#024878",
+        backgroundColor: "#47cee6",
+        borderRadius: 40,
+        marginTop: -10,
     },
     subTitle: {
         fontFamily: "Avenir-Light",
@@ -203,7 +250,7 @@ const styles = StyleSheet.create({
     goalInput: {
         position: "relative",
         height: 35,
-        width: "40%",
+        width: "15%",
         borderColor: "#024878",
         borderRadius: 10,
         borderWidth: 2,
@@ -260,7 +307,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: "5%",
+        marginTop: "2%",
     },
     container: {
         flex: 1,

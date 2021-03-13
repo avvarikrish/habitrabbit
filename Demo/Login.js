@@ -52,6 +52,9 @@ export class Login extends React.Component {
 
     signup(){
 
+        // function that calls the signup handler function if it is a valid signup,
+        // but also makes sure that the passwords match when signing up.
+
         if (this.state.passwordSignup != this.state.passwordSignupVerify) {
             Alert.alert("Passwords do not match.")
         }
@@ -71,6 +74,10 @@ export class Login extends React.Component {
 
 
     render() {
+
+        // render function that renders the login screen, asking for username and password input,
+        // also a modal that deals with signup if the user does not have an account.
+
         return(
             <View style = {styles.loginScreen}>
                 <Text style = {styles.title}>Habit Rabbit</Text>

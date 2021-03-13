@@ -37,6 +37,7 @@ import Recommendation from './Recommendation.js';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
 import openMap from 'react-native-open-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { and } from 'react-native-reanimated';
 
 navigator.geolocation = require('@react-native-community/geolocation');
 const axios = require('axios');
@@ -53,6 +54,7 @@ export class Home extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      Height: false,
       Steps: false,
       StepWeight: false,
       StepGoal: false,
@@ -71,35 +73,11 @@ export class Home extends React.Component {
       weatherIndex: 0,
       sleepBedtime: false,
       places: false,
-    //   places: [{
-    //         "latitude": 37.680181, 
-    //         "longitude": -121.921498, 
-    //         "frequency": 18, 
-    //         "steps": 48368.7534, 
-    //         "address": "7700 Highland Oaks Dr, Pleasanton, CA 94588, USA", 
-    //         "time": 28080, 
-    //         "time_str": "7 hours 48 mins"
-    //     }, 
-    //     {
-    //         "latitude": 37.527237, 
-    //         "longitude": -121.9679, 
-    //         "frequency": 1, 
-    //         "steps": 5724.2526, 
-    //         "address": "4551 Carol Ave, Fremont, CA 94538, USA", 
-    //         "time": 3254,
-    //         "time_str": "54 mins"
-    //     },
-    //     {
-    //         "latitude": 37.515014, 
-    //         "longitude": -121.92916, 
-    //         "frequency": 1, 
-    //         "steps": 7253.0821000000005,
-    //         "address": "44152 Glendora Dr, Fremont, CA 94539, USA", 
-    //         "time": 4169, 
-    //         "time_str": "1 hour 9 mins"
-    //     }],
     };
 
+
+    // binding all of the functions to make them point to 
+    // the same "this"
     this.modalOpen = this.modalOpen.bind(this);
     this.modalClose = this.modalClose.bind(this);
     this.modalScoreOpen = this.modalScoreOpen.bind(this);
@@ -112,8 +90,8 @@ export class Home extends React.Component {
     this.getLocation = this.getLocation.bind(this);
     this.RecommendationScreen = this.RecommendationScreen.bind(this);
     this.todayScoreWdiget = this.todayScoreWidget.bind(this);
-    this.weatherWidget = this.weatherWidget.bind(this);
-    this.recommendationWidget = this.recommendationWidget.bind(this);
+    this.bedtimeWidget = this.bedtimeWidget.bind(this);
+    this.recommendedWalkWidget = this.recommendedWalkWidget.bind(this);
     this.weatherIntervalBar = this.weatherIntervalBar.bind(this);
     this.getSleep = this.getSleep.bind(this);
     this.goToLocation = this.goToLocation.bind(this);
@@ -136,12 +114,16 @@ export class Home extends React.Component {
     }
 
     async getAppleHealthData() {
+
+        // function that retrieves Apple Health data for steps and height
+
         const healthKitOptions = {
             permissions: {
                 read:  [
                     PERMS.DateOfBirth,
                     PERMS.Weight,
-                    PERMS.StepCount
+                    PERMS.StepCount,
+                    PERMS.Height,
                 ]
             }
         };
@@ -153,16 +135,21 @@ export class Home extends React.Component {
             }
 
             AppleHealthKit.getStepCount(null, (err, results) => {
-                this.setState({
-                    Steps: results
-                });
+                this.setState({ Steps: results });
+            })
+
+            AppleHealthKit.getLatestHeight(null, (err, results) => {
+                this.setState({ Height: results });
             })
         })
     }
 
     async getDataFromDatabase() {
+
+        // API call to the database that retrieves all of the data that the user has previously inputed, 
+        // sleep, goals and scores.
+
         const url = "https://botsecure.mangocircle.com:8000/scores/get-scores";
-        // const url = "http://127.0.0.1:5000/scores/get-scores";
         await axios.get(url, {
             params: {
                 username: this.props.username, 
@@ -178,7 +165,6 @@ export class Home extends React.Component {
                     CumulativeScore: response.data[0].cumulative_score,
                 
                 })
-                console.log(response.data);
             }
         }).catch((response) => {
             console.log(response);
@@ -186,6 +172,9 @@ export class Home extends React.Component {
     }
 
     async getAllScores() {
+
+    //   API call to retrieve all the past scores to load up in the calendar
+    
       const url = "https://botsecure.mangocircle.com:8000/scores/get-scores";
       await axios.get(url, {
           params: {
@@ -198,11 +187,6 @@ export class Home extends React.Component {
           }
       }).then((response) => {
           if (response.data != []){
-              // this.setState({Sleep: response.data[0].subscores.sleep.value, SleepWeight: response.data[0].subscores.sleep.weight, 
-              //     SleepGoal: response.data[0].subscores.sleep.goal, StepGoal: response.data[0].subscores.steps.goal, StepWeight: response.data[0].subscores.steps.weight,
-              //     CumulativeScore: response.data[0].cumulative_score,
-              
-              // })
               var dict = {}
               for (var i = 0; i < response.data.length; i++) {
                 var day = '';
@@ -230,34 +214,40 @@ export class Home extends React.Component {
       })
   }
     async getLocation() {
+
+        // function that gets the current location of the user and passes in the latitude and
+        // longitude to an API call that retrieves the recommended locations to walk to.
+
         navigator.geolocation.requestAuthorization();
         navigator.geolocation.getCurrentPosition(
             position => {
                 const location = JSON.stringify(position);
           
                 this.setState({ location });
-                console.log("ASDFASDFDSAF");
-                console.log(this.state.location);
             
                 const coords = JSON.parse(this.state.location).coords;
                 const url = "https://botsecure.mangocircle.com:8000/index/get-locations";
 
                 let goal = 10000;
-
+                let height = 68;
                 if (this.state.Steps && this.state.StepGoal){
                     goal = this.state.StepGoal - this.state.Steps.value;
                 }
                 else if (!this.state.Steps && this.state.StepGoal){
                     goal = this.state.StepGoal
                 }
-                console.log(goal);
+
+                if (this.state.height !== false){
+                    height = this.state.Height.value;
+                }
+
                 axios.get(url, {
                 params: {
                     longitude: coords.longitude,
                     latitude: coords.latitude,
                     steps: goal,
                     username: this.props.username,
-                
+                    height: height,
                 },
                 headers: {
                     Accept: 'application/json',
@@ -265,10 +255,7 @@ export class Home extends React.Component {
                 }
                 })
                 .then((response) => {
-                    console.log("KRISH ASKED ME TO TO DO THIS SO IM PRINTING IT. YESSIR!")
-                    this.setState({ places: response.data });
-                    console.log( this.state.places );
-                    
+                    this.setState({ places: response.data });                    
                 })
                 .catch((error) => {
                     console.log(error);
@@ -280,6 +267,10 @@ export class Home extends React.Component {
     }
 
     async getSleep() {
+
+        // function that gets the recommended bedtime for the user, taking into
+        // account the user's sleep goal.
+
         const url  = "https://botsecure.mangocircle.com:8000/index/get-sleep"
         axios.get(url, {
             params: {
@@ -300,18 +291,22 @@ export class Home extends React.Component {
 
 
     async componentDidMount() {
-        //API calls to data base getting sleep and weights etc.
+
+        // Functions to retrieve all the data required for the application to function,
+        // making sure they are async since each call should be sequential.
+
         await this.getAppleHealthData();
         await this.getDataFromDatabase();
         await this.getAllScores();
         await this.getLocation();
         await this.getSleep();
-
-        console.log(this.state);
     }
 
     async inputAppleHealthIntoDatabase() {
-        // const url = "http://127.0.0.1:5000/scores/add-score";
+
+        // function that posts the step data from Apple Health into the database storing
+        // all of the user data.
+
         const url = "https://botsecure.mangocircle.com:8000/scores/add-score";
         const healthKitOptions = {
             permissions: {
@@ -335,15 +330,12 @@ export class Home extends React.Component {
                     refreshing: false,
                 });
                 //api post request here posting it to the database
-                console.log(this.state.Steps);
 
                 if (this.state.Steps){
                     axios.post(url, {
                         username: this.props.username,
                         steps: this.state.Steps.value,
                     }).then((response) => {
-                        // this.setState({ CumulativeScore: response.data.cumulative_score })
-                        // console.log(response.data);
                         this.setState({Sleep: response.data.subscores.sleep.value, SleepWeight: response.data.subscores.sleep.weight, 
                             SleepGoal: response.data.subscores.sleep.goal, StepGoal: response.data.subscores.steps.goal, StepWeight: response.data.subscores.steps.weight,
                             CumulativeScore: response.data.cumulative_score,
@@ -358,6 +350,9 @@ export class Home extends React.Component {
 
     async refreshScreen() {
         
+        // Updates the database with API calls from Apple Health when refreshing the screen,
+        // as well as getting an updated location and sleep time.
+
         await this.inputAppleHealthIntoDatabase();
         await this.getLocation();
         await this.getSleep();
@@ -365,6 +360,9 @@ export class Home extends React.Component {
     }
 
     goToLocation(data) {
+
+        // function that opens the map app to get the directions to 
+        // reach the location recommended by our app.
 
         axios.post("https://botsecure.mangocircle.com:8000/index/add-location", 
         {
@@ -378,6 +376,9 @@ export class Home extends React.Component {
       }
 
     todayScoreWidget() {
+
+        // function that renders the TODAY widget, showing the progress bars for steps
+        // and sleep, as well as the score for the day.
 
         return (
             <View style={styles.card}>
@@ -436,6 +437,12 @@ export class Home extends React.Component {
     }
 
     weatherIntervalBar() {
+
+        // function that renders the bar to show the user what times are valid to walk,
+        // grey means to not walk, 
+
+        // value to divide by to make sure the valid time bar is the same size, and 
+        // resizes based on the times given.
         const denominator = 4.16;
         let percent_width;
         const percent_height = 20;
@@ -446,7 +453,7 @@ export class Home extends React.Component {
                 const [open, setOpen] = useState(false);
                 var str_width = percent_width.toString() + "%";
                 
-                if (data.description){
+                if (data.valid){
                     let style_color;
                     let start;
                     let color;
@@ -517,8 +524,10 @@ export class Home extends React.Component {
         }
     }
 
-    weatherWidget() {
-        console.log(this.state.places);
+    recommendedWalkWidget() {
+
+        // function that renders the recommended walk widget, along with the weather. 
+        // this shows the user the top recommended place to walk to given the current conditions.
 
         return (
             <View style={styles.walkCardContainer}>
@@ -570,7 +579,10 @@ export class Home extends React.Component {
         );
     }
 
-    recommendationWidget() {
+    bedtimeWidget() {
+
+        // this function returns the recommended bedtime for the user, showing
+        // the projected sleep subscore based on the current time.
 
         let hour_first;
         let hour_second;
@@ -579,24 +591,31 @@ export class Home extends React.Component {
         let time_of_day;
 
         if (this.state.sleepBedtime !== false){
-            if (this.state.sleepBedtime.start_hour < 10){
+
+            let start_hour = Math.floor(this.state.sleepBedtime.start_hour);
+            let start_minute = Math.floor(this.state.sleepBedtime.start_min);
+
+            if (start_hour < 10){
                 hour_first = 0;
-                hour_second = this.state.sleepBedtime.start_hour;
+                hour_second = start_hour;
             }
             else{
-                hour_first = Math.floor(this.state.sleepBedtime.start_hour/10);
-                hour_second = this.state.sleepBedtime.start_hour%10;
+                if (start_hour > 12){
+                    start_hour = start_hour - 12;
+                }
+                hour_first = Math.floor(start_hour/10);
+                hour_second = start_hour%10;
             }
 
 
 
-            if (this.state.sleepBedtime.start_minute < 10){
+            if (start_minute < 10){
                 minute_first = 0;
-                minute_second = this.state.sleepBedtime.start_min;
+                minute_second = start_minute;
             }
             else{
-                minute_first = Math.floor(this.state.sleepBedtime.start_min/10);
-                minute_second = this.state.sleepBedtime.start_min%10;
+                minute_first = Math.floor(start_minute/10);
+                minute_second = start_minute%10;
             }
 
             if (this.state.sleepBedtime.start_hour >= 12){
@@ -635,14 +654,24 @@ export class Home extends React.Component {
                             <Text style = {styles.weatherForcastTitle}>{time_of_day}</Text>
                         </View>
 
+                    </View> 
+                    : []
+                }
+                {(this.state.sleepBedtime !== false) ?
+                    <View style = {{marginTop: "2%", flex: 1, flexDirection: "row", alignItems: "center"}}>
+                        <Text style= {styles.scoreTextProjection}>Projected Sleep Subscore: </Text>
+                        <Text style={styles.scoreValueProjection}>{this.state.sleepBedtime.score.toFixed(2)}</Text>
                     </View> : []
-             }
-                
+                }
+                                
             </View>
         );
     }
 
     HomeScreen() {
+
+        // function that renders the home screen, showing the score widget, recommended walk widget,
+        // and the recommended bedtime widget.
     
         return (
             <View style = {{height: '100%'}}>
@@ -660,9 +689,9 @@ export class Home extends React.Component {
                     <View style={styles.center}>
                         {this.todayScoreWdiget()}
                         
-                        {this.weatherWidget()}
+                        {this.recommendedWalkWidget()}
 
-                        {this.recommendationWidget()}
+                        {this.bedtimeWidget()}
                         
                         
                     </View>
@@ -673,13 +702,18 @@ export class Home extends React.Component {
   }
 
   InputScreen() {
+      
+      // function that returns the input screen for sleep and steps.
+
       return (
         <GoalInput username = {this.props.username}/>
       );
   }
 
   RecommendationScreen() {
-    // const coords = JSON.parse(this.state.location).coords
+
+    // function that returns the recommendation screen for the user.
+
     return (
       <Recommendation places = {this.state.places}/>
     );
@@ -688,6 +722,9 @@ export class Home extends React.Component {
 
 
   renderItem(item) {
+
+    // function to render an item in the calendar for the calendar screen.
+
     return (
       <TouchableOpacity
         testID={testIDs.agenda.ITEM}
@@ -718,7 +755,7 @@ export class Home extends React.Component {
             color: "#00adf5",
           }}
         >
-          {item.score}
+          {item.score.toFixed(2)}
         </Text>
         <Text style = {styles.progressBarTitle}>
           Sleep
@@ -741,6 +778,10 @@ export class Home extends React.Component {
   }
 
   renderEmptyDate() {
+
+    // function to render an empty date when there is no data for a specific
+    // day on the calendar screen.
+
     return (
       <View style={styles.emptyDate}>
             <Text style={{ color: '#cccccc', }}>
@@ -761,7 +802,6 @@ export class Home extends React.Component {
 
 
   onDayPress(day) {
-    console.log(day);
     const url = "https://botsecure.mangocircle.com:8000/scores/get-score";
     axios.get(url, {
       params: {
@@ -813,6 +853,10 @@ export class Home extends React.Component {
 
 
   render() {
+
+    // main render function that uses a tab navigator in order to keep screens separate.
+    // screens: home, input, navigation/recommendatoin, and calendar.
+
     return (
         <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -1092,6 +1136,15 @@ const styles = StyleSheet.create({
         fontFamily: "Avenir-Light",
         fontSize: 20,
         // color: "white"
+    },
+    scoreTextProjection: {
+        fontFamily: "Avenir-Light",
+        fontSize: 17,
+    },
+    scoreValueProjection: {
+        fontSize: 25, 
+        fontFamily: 'Avenir-Light', 
+        color: "#00adf5",
     },
     container: {
         flex: 1,
