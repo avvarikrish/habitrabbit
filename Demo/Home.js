@@ -791,60 +791,21 @@ export class Home extends React.Component {
     );
   }
 
-  rowHasChanged(r1, r2) {
-    return r1.name !== r2.name;
-  }
-
-  timeToString(time) {
-    const date = new Date(time);
-    return date.toISOString().split('T')[0];
-  }
-
-
-  onDayPress(day) {
-    const url = "https://botsecure.mangocircle.com:8000/scores/get-score";
-    axios.get(url, {
-      params: {
-        username: 'a', 
-        month: day.month, 
-        day: day.day, 
-        year: day.year,
-      },
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then((response) => {
-      console.log(response.data);
-    })
-    .catch((error) => {
-      console.log(error);
-    })
-    .then(function () {
-      // always executed
-    });
-  }
-
 
   CalendarScreen() {
+
+    // function to render Calendar screen and its components
+
     return (
 
         <View style={{ flex: 1}}>
-            
             <Agenda 
-            // testID={testIDs.agenda.CONTAINER}
             items={this.state.items}
             renderEmptyData={this.renderEmptyDate.bind(this)}
-            
-            // loadItemsForMonth={this.loadItems.bind(this)}
-            // rowHasChanged={this.rowHasChanged.bind(this)}
-            onDayPress={this.onDayPress.bind(this)}
             renderItem={this.renderItem.bind(this)}
             theme = {{
                 selectedDayBackgroundColor: '#00adf5',
-            }}
-                    
+            }}      
             />
         </View>
 
