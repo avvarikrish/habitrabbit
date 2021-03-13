@@ -4,25 +4,29 @@ from dotenv import load_dotenv
 import os
 import googlemaps
 
+# initialize Flask server and set MongoDB url
 app = Flask(__name__)
-print("MONGO URL", os.environ.get('MONGO_URL'))
 app.config['MONGO_URI'] = os.environ.get('MONGO_URL')
 load_dotenv()
 
+# get habitrabbit database and collections
 hr_db = PyMongo(app)
 users_collection = hr_db.db['users']
 scores_collection = hr_db.db['scores']
 index_collection = hr_db.db['index']
 
+# create Google Maps client
 gmaps = googlemaps.Client(key=os.environ.get('GMAPS_KEY'))
 
+# register blueprints with endpoints
 from user_routes import user_api
 from score_routes import scores_api
 from index_routes import index_api
-
 app.register_blueprint(user_api, url_prefix='/users')
 app.register_blueprint(scores_api, url_prefix='/scores')
 app.register_blueprint(index_api, url_prefix='/index')
+
 print("App is registered")
+
 if __name__ == '__main__':
     app.run()

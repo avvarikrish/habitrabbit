@@ -4,6 +4,7 @@ env/
 
 # pycache
 __pycache__/
+request_schemas/__pycache__/
 
 # geojson
 us-zip-code-latitude-and-longitude.json

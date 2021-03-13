@@ -1,3 +1,5 @@
+# Recommendation class to create a specific walking recommendation
+
 class Recommendation:
     def __init__(self):
         self._latitude = 0
@@ -10,36 +12,42 @@ class Recommendation:
         self._valid_weather_times = []
         self._valid_weather_hours = 0
 
+    # latitude
     def get_latitude(self):
         return self._latitude
 
     def set_latitude(self, latitude):
         self._latitude = latitude
 
+    # longitude
     def get_longitude(self):
         return self._longitude
 
     def set_longitude(self, longitude):
         self._longitude = longitude
 
+    # location frequency
     def get_frequency(self):
         return self._frequency
 
     def set_frequency(self, frequency):
         self._frequency = frequency
 
+    # recommendation step count
     def get_steps(self):
         return self._steps
 
     def set_steps(self, steps):
         self._steps = steps
 
+    # recommendation address
     def get_address(self):
         return self._address
 
     def set_address(self, address):
         self._address = address
 
+    # amount of time walk takes
     def get_time(self):
         return self._time
 
@@ -52,6 +60,7 @@ class Recommendation:
     def set_time_str(self, time_str):
         self._time_str = time_str
 
+    # valid time ranges to walk based on weather
     def add_weather_time(self, weather_time):
         self._valid_weather_times.append(weather_time)
 
@@ -64,6 +73,7 @@ class Recommendation:
     def add_valid_weather_hours(self, value):
         self._valid_weather_hours += value
 
+    # get recommendation as json
     def to_json(self):
         return {
             'latitude': self._latitude,
